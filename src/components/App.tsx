@@ -16,6 +16,7 @@ import MeditationPage from '@/components/meditation/MeditationPage';
 import MotivationPage from '@/components/motivation/MotivationPage';
 import ProfilePage from '@/components/profile/ProfilePage';
 import SettingsPage from '@/components/settings/SettingsPage';
+import PWAInstallPrompt, { NetworkStatus } from '@/components/PWAInstallPrompt';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -55,10 +56,12 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen">
+      <NetworkStatus />
       <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
       <main className="flex-1 overflow-auto" style={{ backgroundColor: useApp().currentTheme.background }}>
         {renderPage()}
       </main>
+      <PWAInstallPrompt />
     </div>
   );
 }
