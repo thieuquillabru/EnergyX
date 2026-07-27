@@ -1,8 +1,21 @@
 # EnergyX - Application de Développement Personnel
 
 ![EnergyX Logo](https://img.shields.io/badge/EnergyX-Développement%20Personnel-0ea5e9?style=for-the-badge)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/thieuquillabru/EnergyX)
+[![GitHub deployments](https://img.shields.io/github/deployments/thieuquillabru/EnergyX/production)](https://github.com/thieuquillabru/EnergyX/deployments)
 
 EnergyX est une application web complète de développement personnel, mentale et physique. Elle vous permet de gérer tous les aspects de votre vie : habitudes, objectifs, santé, passions, apprentissage et bien plus encore.
+
+## 🚀 Déploiement
+
+### Option 1 : Deployer avec Vercel (Recommandé)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/thieuquillabru/EnergyX)
+
+1. Cliquez sur le bouton "Deploy with Vercel" ci-dessus
+2. Connectez votre compte GitHub si ce n'est pas déjà fait
+3. Cliquez sur "Create"
+4. Votre application sera déployée automatiquement !
 
 ## ✨ Fonctionnalités
 
@@ -95,6 +108,43 @@ EnergyX est une application web complète de développement personnel, mentale e
 ```bash
 # Cloner le repository
 git clone https://github.com/thieuquillabru/EnergyX.git
+cd EnergyX
+```
+
+### Option 2 : Installation locale avec Vercel CLI
+
+```bash
+# Installer Vercel CLI
+npm install -g vercel
+
+# Se connecter à Vercel
+vercel login
+
+# Déployer
+vercel
+
+# Déployer en production
+vercel --prod
+```
+
+### Option 3 : Docker
+
+```bash
+# Build l'image
+docker build -t energyx .
+
+# Run le conteneur
+docker run -p 3000:3000 energyx
+```
+
+### Option 4 : Autre hébergeur (Netlify, Railway, etc.)
+
+1. Poussez le code sur GitHub
+2. Connectez votre repo à votre hébergeur préféré
+3. Les paramètres par défaut devraient fonctionner :
+   - Build command: `npm run build`
+   - Output directory: `.next`
+   - Install command: `npm install`
 
 # Aller dans le dossier
 cd EnergyX
