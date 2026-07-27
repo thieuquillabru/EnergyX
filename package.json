@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:pages": "NEXT_PUBLIC_BASE_PATH=/EnergyX next build && rm -rf docs && cp -r out docs && touch docs/.nojekyll"
   },
   "keywords": [
     "développement personnel",
@@ -38,5 +39,6 @@
     "eslint-config-next": "16.2.12",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "homepage": "https://thieuquillabru.github.io/EnergyX/"
 }

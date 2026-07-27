@@ -2,7 +2,7 @@
 
 ![EnergyX Logo](https://img.shields.io/badge/EnergyX-Développement%20Personnel-0ea5e9?style=for-the-badge)
 [![PWA](https://img.shields.io/badge/PWA-Installable-4CAF50?style=for-the-badge)](https://developer.mozilla.org/fr/docs/Web/Progressive_web_apps)
-[![Deploy to GitHub Pages](https://github.com/thieuquillabru/EnergyX/actions/workflows/deploy.yml/badge.svg)](https://github.com/thieuquillabru/EnergyX/actions/workflows/deploy.yml)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-en%20ligne-222?style=for-the-badge&logo=github)](https://thieuquillabru.github.io/EnergyX/)
 
 ## 🚀 Utiliser l'application
 
@@ -144,31 +144,37 @@ npm run build   # génère le site statique dans out/
 npm run lint    # vérifie le code
 ```
 
-## 📦 Déploiement
+## 📦 Déploiement (GitHub Pages)
 
-Le site est **déployé automatiquement sur GitHub Pages** à chaque push sur
-`main`, via le workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
+Le site est publié **directement depuis le dossier [`docs/`](docs/)** de la
+branche `main` : aucun serveur, aucun hébergeur tiers, aucune GitHub Action.
 
-L'application est exportée en statique (`output: 'export'`), il n'y a donc
-aucun serveur à gérer et aucun hébergeur tiers n'est nécessaire.
+### Activer GitHub Pages (une seule fois)
 
-### Activer GitHub Pages (à faire une seule fois)
+1. **Settings → Pages**
+2. **Build and deployment → Source** : `Deploy from a branch`
+3. **Branch** : `main`, dossier **`/docs`**, puis **Save**
 
-1. Aller dans **Settings → Pages** du repository
-2. Dans **Build and deployment → Source**, choisir **GitHub Actions**
-3. Pousser sur `main` : le site est publié sur
-   `https://<votre-utilisateur>.github.io/EnergyX/`
+Le site est alors disponible sur https://thieuquillabru.github.io/EnergyX/
 
-> Le chemin de base est injecté au build via la variable
-> `NEXT_PUBLIC_BASE_PATH`. En local elle est vide, ce qui permet de continuer
-> à travailler sur `http://localhost:3000/`.
+### Publier une mise à jour
+
+Après avoir modifié le code, régénérez le dossier `docs/` puis committez :
+
+```bash
+npm run build:pages
+git add docs && git commit -m "Met a jour le site" && git push
+```
+
+> `build:pages` construit l'application avec `NEXT_PUBLIC_BASE_PATH=/EnergyX`
+> (le site est servi depuis un sous-dossier) et ajoute le fichier `.nojekyll`,
+> sans lequel GitHub Pages ignorerait le dossier `_next/`.
 
 ### Héberger ailleurs
 
-Le dossier `out/` produit par `npm run build` est un site statique classique :
-il peut être servi par n'importe quel hébergeur (Netlify, Cloudflare Pages,
-un simple serveur nginx, …). Pensez à définir `NEXT_PUBLIC_BASE_PATH` si le
-site n'est pas servi à la racine du domaine.
+`npm run build` produit un site statique classique dans `out/`, servable par
+n'importe quel hébergeur (Netlify, Cloudflare Pages, nginx…). Laissez
+`NEXT_PUBLIC_BASE_PATH` vide si le site est servi à la racine du domaine.
 
 ## 🛠️ Technologies
 
