@@ -1,12 +1,28 @@
 # EnergyX - Application de Développement Personnel
 
 ![EnergyX Logo](https://img.shields.io/badge/EnergyX-Développement%20Personnel-0ea5e9?style=for-the-badge)
+[![PWA](https://img.shields.io/badge/PWA-Installable-4CAF50?style=for-the-badge)](https://developer.mozilla.org/fr/docs/Web/Progressive_web_apps)
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/thieuquillabru/EnergyX)
 [![GitHub deployments](https://img.shields.io/github/deployments/thieuquillabru/EnergyX/production)](https://github.com/thieuquillabru/EnergyX/deployments)
 
 EnergyX est une application web complète de développement personnel, mentale et physique. Elle vous permet de gérer tous les aspects de votre vie : habitudes, objectifs, santé, passions, apprentissage et bien plus encore.
 
-## 🚀 Déploiement
+## 📱 Progressive Web App (PWA)
+
+EnergyX est une **PWA installable** ! Vous pouvez l'installer sur votre appareil comme une application native.
+
+### Fonctionnalités PWA :
+- ✅ **Installation sur mobile/PC** - Ajoutez à l'écran d'accueil
+- ✅ **Fonctionne hors ligne** - Accédez à vos données même sans connexion
+- ✅ **Interface plein écran** - Expérience immersive
+- ✅ **Raccourcis** - Accès direct aux sections depuis l'écran d'accueil
+
+### Comment installer ?
+
+**Sur Mobile :**
+1. Ouvrez l'app dans votre navigateur
+2. Cliquez sur "Installer" ou sur "Ajouter à l'écran d'accueil"
+3. L'app apparaîtra comme une icône native !
 
 ### Option 1 : Deployer avec Vercel (Recommandé)
 
