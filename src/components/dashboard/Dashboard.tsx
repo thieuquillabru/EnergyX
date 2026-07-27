@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useToday, formatLongDate } from '@/hooks/useToday';
 import Card from '@/components/ui/Card';
 import ProgressBar from '@/components/ui/ProgressBar';
 import Badge from '@/components/ui/Badge';
@@ -11,9 +12,12 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onNavigate }: DashboardProps) {
-  const { currentTheme, user, habits, goals, journalEntries, moodHistory, waterIntake, pomodoroSessions, meditationSessions, workouts, quotes } = useApp();
+  const { currentTheme, user, habits, goals, moodHistory, waterIntake, addWater, pomodoroSessions, meditationSessions, workouts, quotes, completeHabit } = useApp();
 
-  const today = new Date().toISOString().split('T')[0];
+  // Date-dependent values resolve on the client only, so the server-rendered
+  // markup and the first client render always match.
+  const today = useToday();
+  const todayLabel = formatLongDate(today);
 
   // Calculate today's habits completion
   const todayHabits = useMemo(() => {
@@ -52,12 +56,23 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     return { weekMeditation, weekWorkouts: weekWorkouts.length, weekCalories };
   }, [meditationSessions, workouts]);
 
-  // Random motivational quote
-  const randomQuote = useMemo(() => {
+  // Motivational quote of the day: derived from the date so it stays stable
+  // across renders (and identical on the server and the client).
+  const quoteOfTheDay = useMemo(() => {
     const favorites = quotes.filter(q => q.isFavorite);
     const source = favorites.length > 0 ? favorites : quotes;
-    return source[Math.floor(Math.random() * source.length)];
-  }, [quotes]);
+    if (source.length === 0) return null;
+    if (!today) return source[0];
+    const seed = today.split('-').reduce((acc, part) => acc + parseInt(part, 10), 0);
+    return source[seed % source.length];
+  }, [quotes, today]);
+
+  const priorityLabels: Record<string, string> = {
+    low: 'Basse',
+    medium: 'Moyenne',
+    high: 'Haute',
+    critical: 'Critique',
+  };
 
   // Mood emoji
   const getMoodEmoji = (mood: string) => {
@@ -92,7 +107,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             Bonjour, {user.name}! 👋
           </h1>
           <p className="mt-1" style={{ color: currentTheme.textSecondary }}>
-            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {todayLabel || '\u00A0'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -143,7 +158,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </div>
             <div>
               <p className="text-2xl font-bold" style={{ color: currentTheme.text }}>{todayPomodoros}</p>
-              <p className="text-sm" style={{ color: currentTheme.textSecondary }}>Pomodoros aujourd'hui</p>
+              <p className="text-sm" style={{ color: currentTheme.textSecondary }}>Pomodoros aujourd&apos;hui</p>
             </div>
           </div>
         </Card>
@@ -198,8 +213,11 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     style={{ backgroundColor: currentTheme.background }}
                   >
                     <button
+                      onClick={() => !isCompleted && completeHabit(habit.id, today)}
+                      disabled={isCompleted || !today}
+                      aria-label={isCompleted ? `${habit.title} déjà complétée` : `Compléter ${habit.title}`}
                       className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                        isCompleted ? 'scale-110' : 'hover:scale-105'
+                        isCompleted ? 'scale-110 cursor-default' : 'hover:scale-105 cursor-pointer'
                       }`}
                       style={{
                         backgroundColor: isCompleted ? currentTheme.success : currentTheme.border,
@@ -265,6 +283,23 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               <p className="text-4xl font-bold" style={{ color: currentTheme.primary }}>{waterIntake}</p>
               <p className="text-sm" style={{ color: currentTheme.textSecondary }}>/ 8 verres</p>
               <ProgressBar value={waterIntake} max={8} className="mt-3" />
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => addWater(1)}
+                  className="flex-1 py-2 rounded-xl text-sm font-medium text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: currentTheme.primary }}
+                >
+                  + 1 verre
+                </button>
+                <button
+                  onClick={() => addWater(-1)}
+                  disabled={waterIntake <= 0}
+                  className="px-4 py-2 rounded-xl text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-40"
+                  style={{ backgroundColor: currentTheme.background, color: currentTheme.text }}
+                >
+                  −
+                </button>
+              </div>
             </div>
           </Card>
         </div>
@@ -300,7 +335,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                                goal.priority === 'medium' ? 'warning' : 'default'}
                       size="sm"
                     >
-                      {goal.priority}
+                      {priorityLabels[goal.priority] ?? goal.priority}
                     </Badge>
                   </div>
                   <ProgressBar value={goal.progress} showLabel size="sm" />
@@ -341,10 +376,14 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         {/* Motivational Quote */}
         <Card style={{ backgroundColor: currentTheme.primary }}>
           <h3 className="font-bold mb-3 text-white">Citation du jour ✨</h3>
-          <blockquote className="text-white">
-            <p className="text-lg italic">"{randomQuote.text}"</p>
-            <footer className="mt-2 text-white/80">— {randomQuote.author}</footer>
-          </blockquote>
+          {quoteOfTheDay ? (
+            <blockquote className="text-white">
+              <p className="text-lg italic">&laquo;&nbsp;{quoteOfTheDay.text}&nbsp;&raquo;</p>
+              <footer className="mt-2 text-white/80">— {quoteOfTheDay.author}</footer>
+            </blockquote>
+          ) : (
+            <p className="text-white/80">Aucune citation disponible.</p>
+          )}
         </Card>
       </div>
 

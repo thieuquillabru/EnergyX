@@ -115,8 +115,8 @@ export default function SkillsPage() {
                   <Badge size="sm" variant="primary">{categories.find(c => c.value === skill.category)?.label.split(' ')[1]}</Badge>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => { setEditingSkill(skill); setFormData({ name: skill.name, category: skill.category, level: skill.level }); setIsModalOpen(true); }} className="p-2 rounded-lg hover:bg-opacity-10" style={{ color: currentTheme.textSecondary }}>✏️</button>
-                  <button onClick={() => deleteSkill(skill.id)} className="p-2 rounded-lg" style={{ color: currentTheme.error }}>🗑️</button>
+                  <button onClick={() => { setEditingSkill(skill); setFormData({ name: skill.name, category: skill.category, level: skill.level }); setIsModalOpen(true); }} className="p-2 rounded-lg hover-soft" style={{ color: currentTheme.textSecondary }}>✏️</button>
+                  <button onClick={() => deleteSkill(skill.id)} className="p-2 rounded-lg hover-soft" style={{ color: currentTheme.error }}>🗑️</button>
                 </div>
               </div>
               <div className="mb-3">

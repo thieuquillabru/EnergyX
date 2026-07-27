@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Goal, GoalCategory, Priority, GoalStatus } from '@/types';
+import { Goal, GoalCategory, Priority } from '@/types';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -252,14 +252,17 @@ export default function GoalsPage() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleEdit(goal)}
-                      className="p-2 rounded-lg hover:bg-opacity-10 transition-colors"
+                      className="p-2 rounded-lg transition-colors hover-soft"
                       style={{ color: currentTheme.textSecondary }}
                     >
                       <EditIcon />
                     </button>
                     <button
-                      onClick={() => deleteGoal(goal.id)}
-                      className="p-2 rounded-lg hover:bg-opacity-10 transition-colors"
+                      onClick={() => {
+                        if (window.confirm(`Supprimer l'objectif « ${goal.title} » ?`)) deleteGoal(goal.id);
+                      }}
+                      aria-label={`Supprimer ${goal.title}`}
+                      className="p-2 rounded-lg transition-colors hover-soft"
                       style={{ color: currentTheme.error }}
                     >
                       <DeleteIcon />

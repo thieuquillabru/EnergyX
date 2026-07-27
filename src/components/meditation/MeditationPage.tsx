@@ -2,12 +2,10 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
-import { MeditationSession, MeditationType } from '@/types';
+import { MeditationType } from '@/types';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import Select from '@/components/ui/Select';
 import Badge from '@/components/ui/Badge';
-import ProgressBar from '@/components/ui/ProgressBar';
 
 export default function MeditationPage() {
   const { currentTheme, meditationSessions, addMeditationSession } = useApp();
@@ -41,22 +39,26 @@ export default function MeditationPage() {
     return meditationSessions.filter(s => s.date >= weekAgo.toISOString().split('T')[0]).reduce((acc, s) => acc + s.duration, 0);
   }, [meditationSessions]);
 
+  // Keep the completion handler in a ref so the interval effect doesn't need
+  // to depend on a function identity that changes on every render.
+  const handleCompleteRef = useRef<() => void>(() => {});
+
   useEffect(() => {
-    if (isMeditating && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(intervalRef.current!);
-            handleComplete();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    if (!isMeditating) return;
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          queueMicrotask(() => handleCompleteRef.current());
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    intervalRef.current = interval;
+
+    return () => clearInterval(interval);
   }, [isMeditating]);
 
   const startMeditation = () => {
@@ -84,6 +86,10 @@ export default function MeditationPage() {
     });
   };
 
+  useEffect(() => {
+    handleCompleteRef.current = handleComplete;
+  });
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -100,7 +106,7 @@ export default function MeditationPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card padding="sm" className="text-center">
           <p className="text-3xl font-bold" style={{ color: currentTheme.primary }}>{todayMinutes}</p>
-          <p className="text-sm" style={{ color: currentTheme.textSecondary }}>Minutes aujourd'hui</p>
+          <p className="text-sm" style={{ color: currentTheme.textSecondary }}>Minutes aujourd&apos;hui</p>
         </Card>
         <Card padding="sm" className="text-center">
           <p className="text-3xl font-bold" style={{ color: currentTheme.success }}>{weekMinutes}</p>
@@ -108,7 +114,7 @@ export default function MeditationPage() {
         </Card>
         <Card padding="sm" className="text-center">
           <p className="text-3xl font-bold" style={{ color: currentTheme.accent }}>{todaySessions.length}</p>
-          <p className="text-sm" style={{ color: currentTheme.textSecondary }}>Sessions aujourd'hui</p>
+          <p className="text-sm" style={{ color: currentTheme.textSecondary }}>Sessions aujourd&apos;hui</p>
         </Card>
       </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import { useIsHydrated } from '@/hooks/useIsHydrated';
 import {
   User,
   Habit,
@@ -14,13 +15,45 @@ import {
   PomodoroSession,
   ThemeType,
   Passion,
-  Achievement,
   PomodoroSettings,
   DailyView,
   MoodEntry,
   MotivationalQuote,
   Challenge,
 } from '@/types';
+
+const STORAGE_KEY = 'energyx_data';
+
+/**
+ * Reads the persisted state once, synchronously, so it can be used as a lazy
+ * `useState` initialiser. Returns `null` on the server or when nothing is
+ * stored, in which case every slice falls back to its default value.
+ */
+type SavedData = Record<string, unknown>;
+
+let savedDataCache: SavedData | null | undefined;
+
+function readSavedData(): SavedData | null {
+  if (savedDataCache !== undefined) return savedDataCache;
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    savedDataCache = raw ? (JSON.parse(raw) as SavedData) : null;
+  } catch (e) {
+    console.error('Failed to load saved data:', e);
+    savedDataCache = null;
+  }
+  return savedDataCache;
+}
+
+/** Lazy initialiser factory: persisted value if present, otherwise `fallback`. */
+function persisted<T>(key: string, fallback: T) {
+  return (): T => {
+    const saved = readSavedData();
+    const value = saved?.[key];
+    return value === undefined || value === null ? fallback : (value as T);
+  };
+}
 
 // Default Themes
 export const defaultThemes: ThemeType[] = [
@@ -323,55 +356,30 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User>(initialUser);
-  const [habits, setHabits] = useState<Habit[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [moodHistory, setMoodHistory] = useState<MoodEntry[]>([]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [games, setGames] = useState<Game[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [workouts, setWorkouts] = useState<Workout[]>([]);
-  const [meditationSessions, setMeditationSessions] = useState<MeditationSession[]>([]);
-  const [pomodoroSessions, setPomodoroSessions] = useState<PomodoroSession[]>([]);
-  const [pomodoroSettings, setPomodoroSettings] = useState<PomodoroSettings>(defaultPomodoroSettings);
-  const [themes, setThemes] = useState<ThemeType[]>(defaultThemes);
-  const [passions, setPassions] = useState<Passion[]>([]);
-  const [quotes, setQuotes] = useState<MotivationalQuote[]>(defaultQuotes);
-  const [challenges, setChallenges] = useState<Challenge[]>(defaultChallenges);
-  const [waterIntake, setWaterIntake] = useState<number>(0);
+  const [user, setUser] = useState<User>(persisted('user', initialUser));
+  const [habits, setHabits] = useState<Habit[]>(persisted<Habit[]>('habits', []));
+  const [goals, setGoals] = useState<Goal[]>(persisted<Goal[]>('goals', []));
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>(persisted<JournalEntry[]>('journalEntries', []));
+  const [moodHistory, setMoodHistory] = useState<MoodEntry[]>(persisted<MoodEntry[]>('moodHistory', []));
+  const [books, setBooks] = useState<Book[]>(persisted<Book[]>('books', []));
+  const [games, setGames] = useState<Game[]>(persisted<Game[]>('games', []));
+  const [skills, setSkills] = useState<Skill[]>(persisted<Skill[]>('skills', []));
+  const [workouts, setWorkouts] = useState<Workout[]>(persisted<Workout[]>('workouts', []));
+  const [meditationSessions, setMeditationSessions] = useState<MeditationSession[]>(persisted<MeditationSession[]>('meditationSessions', []));
+  const [pomodoroSessions, setPomodoroSessions] = useState<PomodoroSession[]>(persisted<PomodoroSession[]>('pomodoroSessions', []));
+  const [pomodoroSettings, setPomodoroSettings] = useState<PomodoroSettings>(persisted('pomodoroSettings', defaultPomodoroSettings));
+  const [themes, setThemes] = useState<ThemeType[]>(persisted('themes', defaultThemes));
+  const [passions, setPassions] = useState<Passion[]>(persisted<Passion[]>('passions', []));
+  const [quotes, setQuotes] = useState<MotivationalQuote[]>(persisted('quotes', defaultQuotes));
+  const [challenges, setChallenges] = useState<Challenge[]>(persisted('challenges', defaultChallenges));
+  const [waterIntake, setWaterIntake] = useState<number>(persisted('waterIntake', 0));
+  const isHydrated = useIsHydrated();
 
-  // Load data from localStorage on mount
-  useEffect(() => {
-    const savedData = localStorage.getItem('energyx_data');
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        setUser(parsed.user || initialUser);
-        setHabits(parsed.habits || []);
-        setGoals(parsed.goals || []);
-        setJournalEntries(parsed.journalEntries || []);
-        setMoodHistory(parsed.moodHistory || []);
-        setBooks(parsed.books || []);
-        setGames(parsed.games || []);
-        setSkills(parsed.skills || []);
-        setWorkouts(parsed.workouts || []);
-        setMeditationSessions(parsed.meditationSessions || []);
-        setPomodoroSessions(parsed.pomodoroSessions || []);
-        setPomodoroSettings(parsed.pomodoroSettings || defaultPomodoroSettings);
-        setThemes(parsed.themes || defaultThemes);
-        setPassions(parsed.passions || []);
-        setQuotes(parsed.quotes || defaultQuotes);
-        setChallenges(parsed.challenges || defaultChallenges);
-        setWaterIntake(parsed.waterIntake || 0);
-      } catch (e) {
-        console.error('Failed to load saved data:', e);
-      }
-    }
-  }, []);
 
-  // Save data to localStorage on change
+  // Persist on change. Gated on hydration so the first (server-matching)
+  // render never overwrites the stored data.
   useEffect(() => {
+    if (!isHydrated) return;
     const data = {
       user,
       habits,
@@ -391,8 +399,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       challenges,
       waterIntake,
     };
-    localStorage.setItem('energyx_data', JSON.stringify(data));
-  }, [user, habits, goals, journalEntries, moodHistory, books, games, skills, workouts, meditationSessions, pomodoroSessions, pomodoroSettings, themes, passions, quotes, challenges, waterIntake]);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      // Quota exceeded / private mode: don't crash the app
+      console.error('Failed to save data:', e);
+    }
+  }, [isHydrated, user, habits, goals, journalEntries, moodHistory, books, games, skills, workouts, meditationSessions, pomodoroSessions, pomodoroSettings, themes, passions, quotes, challenges, waterIntake]);
+
+  // XP / level (handles multiple level-ups in one go)
+  const addXP = useCallback((amount: number) => {
+    setUser(prev => {
+      let xp = prev.stats.xp + amount;
+      let level = prev.stats.level;
+      while (xp >= level * 100) {
+        xp -= level * 100;
+        level += 1;
+      }
+      return { ...prev, stats: { ...prev.stats, xp, level } };
+    });
+  }, []);
 
   // User functions
   const updateUser = useCallback((updates: Partial<User>) => {
@@ -413,25 +439,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const completeHabit = useCallback((id: string, date: string) => {
+    let didComplete = false;
     setHabits(prev => prev.map(h => {
-      if (h.id === id) {
-        const newCompletions = [...h.completions, { date, completed: true }];
-        const newStreak = h.streaks.current + 1;
-        return {
-          ...h,
-          completions: newCompletions,
-          streaks: {
-            ...h.streaks,
-            current: newStreak,
-            longest: Math.max(h.streaks.longest, newStreak),
-            lastCompleted: date,
-          },
-        };
-      }
-      return h;
+      if (h.id !== id) return h;
+      // Guard against double completion for the same day
+      if (h.completions.some(c => c.date === date && c.completed)) return h;
+
+      didComplete = true;
+      const newCompletions = [...h.completions, { date, completed: true }];
+
+      // A streak only continues if the previous completion was the day before
+      const previousDay = new Date(`${date}T00:00:00`);
+      previousDay.setDate(previousDay.getDate() - 1);
+      const previousDayStr = previousDay.toISOString().split('T')[0];
+      const isConsecutive = h.streaks.lastCompleted === previousDayStr;
+      const newStreak = isConsecutive ? h.streaks.current + 1 : 1;
+
+      return {
+        ...h,
+        completions: newCompletions,
+        streaks: {
+          ...h.streaks,
+          current: newStreak,
+          longest: Math.max(h.streaks.longest, newStreak),
+          lastCompleted: date,
+        },
+      };
     }));
-    addXP(10);
-  }, []);
+    if (didComplete) addXP(10);
+  }, [addXP]);
 
   // Goals functions
   const addGoal = useCallback((goal: Goal) => {
@@ -515,7 +551,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addWorkout = useCallback((workout: Workout) => {
     setWorkouts(prev => [...prev, workout]);
     addXP(20);
-  }, []);
+  }, [addXP]);
 
   const updateWorkout = useCallback((id: string, updates: Partial<Workout>) => {
     setWorkouts(prev => prev.map(w => w.id === id ? { ...w, ...updates } : w));
@@ -529,7 +565,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addMeditationSession = useCallback((session: MeditationSession) => {
     setMeditationSessions(prev => [...prev, session]);
     addXP(15);
-  }, []);
+  }, [addXP]);
 
   // Pomodoro functions
   const addPomodoroSession = useCallback((session: PomodoroSession) => {
@@ -537,10 +573,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (session.type === 'focus') {
       addXP(5);
     }
-  }, []);
+  }, [addXP]);
 
   // Theme functions
-  const currentTheme = themes.find(t => t.id === user.preferences.theme.id) || themes[0];
+  const currentTheme = useMemo(
+    () => themes.find(t => t.id === user.preferences.theme.id) || themes[0],
+    [themes, user.preferences.theme.id]
+  );
 
   const setCurrentTheme = useCallback((themeId: string) => {
     const theme = themes.find(t => t.id === themeId);
@@ -591,30 +630,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const addXP = useCallback((amount: number) => {
-    setUser(prev => {
-      const newXP = prev.stats.xp + amount;
-      const xpNeeded = prev.stats.level * 100;
-      if (newXP >= xpNeeded) {
-        return {
-          ...prev,
-          stats: {
-            ...prev.stats,
-            xp: newXP - xpNeeded,
-            level: prev.stats.level + 1,
-          },
-        };
-      }
-      return {
-        ...prev,
-        stats: { ...prev.stats, xp: newXP },
-      };
-    });
-  }, []);
-
   // Water tracking
   const addWater = useCallback((amount: number) => {
-    setWaterIntake(prev => prev + amount);
+    setWaterIntake(prev => Math.max(0, prev + amount));
   }, []);
 
   // Get daily view
@@ -714,10 +732,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setQuotes(defaultQuotes);
     setChallenges(defaultChallenges);
     setWaterIntake(0);
-    localStorage.removeItem('energyx_data');
+    savedDataCache = null;
+    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  const value: AppContextType = {
+  const value: AppContextType = useMemo(() => ({
     user,
     setUser,
     updateUser,
@@ -779,7 +798,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     exportData,
     importData,
     resetData,
-  };
+  }), [
+    user, updateUser,
+    habits, addHabit, updateHabit, deleteHabit, completeHabit,
+    goals, addGoal, updateGoal, deleteGoal,
+    journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry,
+    moodHistory, addMoodEntry,
+    books, addBook, updateBook, deleteBook,
+    games, addGame, updateGame, deleteGame,
+    skills, addSkill, updateSkill, deleteSkill,
+    workouts, addWorkout, updateWorkout, deleteWorkout,
+    meditationSessions, addMeditationSession,
+    pomodoroSessions, addPomodoroSession, pomodoroSettings,
+    themes, currentTheme, setCurrentTheme, addCustomTheme,
+    passions, addPassion, updatePassion, deletePassion,
+    quotes, toggleQuoteFavorite,
+    challenges, addChallenge, updateChallenge,
+    updateStats, addXP,
+    waterIntake, addWater,
+    getDailyView, exportData, importData, resetData,
+  ]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

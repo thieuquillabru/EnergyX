@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
-import { JournalEntry, Mood, MoodEntry } from '@/types';
+import { useToday } from '@/hooks/useToday';
+import { JournalEntry, Mood } from '@/types';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
@@ -11,10 +12,10 @@ import Badge from '@/components/ui/Badge';
 export default function JournalPage() {
   const { currentTheme, journalEntries, addJournalEntry, updateJournalEntry, deleteJournalEntry, moodHistory, addMoodEntry } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [viewMode, setViewMode] = useState<'today' | 'calendar' | 'list'>('today');
 
-  const today = new Date().toISOString().split('T')[0];
+  // Resolved on the client only, so server and client markup stay identical
+  const today = useToday();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -43,12 +44,30 @@ export default function JournalPage() {
     return journalEntries.find(e => e.date === today);
   }, [journalEntries, today]);
 
-  // Get mood for selected date
-  const selectedMood = useMemo(() => {
-    return moodHistory.find(m => m.date === selectedDate);
-  }, [moodHistory, selectedDate]);
+  // Pre-fill the form from today's saved entry so editing never wipes it.
+  // Adjusting state during render (rather than in an effect) is the pattern
+  // React recommends for deriving state from props/context changes.
+  const [loadedEntryId, setLoadedEntryId] = useState<string | null>(null);
+  if (todayEntry && todayEntry.id !== loadedEntryId) {
+    setLoadedEntryId(todayEntry.id);
+    setFormData({
+      content: todayEntry.content ?? '',
+      mood: todayEntry.mood ?? 'okay',
+      gratitude: [
+        todayEntry.gratitude?.[0] ?? '',
+        todayEntry.gratitude?.[1] ?? '',
+        todayEntry.gratitude?.[2] ?? '',
+      ],
+      energy: todayEntry.energy ?? 5,
+      sleep: todayEntry.sleep ?? 7,
+      water: todayEntry.water ?? 0,
+      exercise: todayEntry.exercise ?? 0,
+      tags: todayEntry.tags ?? [],
+    });
+  }
 
   const handleSubmit = () => {
+    if (!today) return;
     const entry: JournalEntry = {
       id: todayEntry?.id || Date.now().toString(),
       date: today,
@@ -75,16 +94,6 @@ export default function JournalPage() {
     });
 
     setIsModalOpen(false);
-    setFormData({
-      content: '',
-      mood: 'okay',
-      gratitude: ['', '', ''],
-      energy: 5,
-      sleep: 7,
-      water: 0,
-      exercise: 0,
-      tags: [],
-    });
   };
 
   const addTag = () => {
@@ -122,18 +131,6 @@ export default function JournalPage() {
     return last30Days;
   }, [moodHistory]);
 
-  const getMoodValue = (mood: Mood | null) => {
-    if (!mood) return 0;
-    const values: Record<Mood, number> = {
-      excellent: 5,
-      good: 4,
-      okay: 3,
-      bad: 2,
-      terrible: 1,
-    };
-    return values[mood];
-  };
-
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -158,7 +155,7 @@ export default function JournalPage() {
         ].map((view) => (
           <button
             key={view.id}
-            onClick={() => setViewMode(view.id as any)}
+            onClick={() => setViewMode(view.id as 'today' | 'calendar' | 'list')}
             className="px-4 py-2 rounded-full text-sm font-medium transition-all"
             style={{
               backgroundColor: viewMode === view.id ? currentTheme.primary : currentTheme.background,
@@ -282,7 +279,7 @@ export default function JournalPage() {
           <Card>
             <h3 className="font-bold mb-4" style={{ color: currentTheme.text }}>Gratitude 🙏</h3>
             <p className="text-sm mb-4" style={{ color: currentTheme.textSecondary }}>
-              Pour quoi êtes-vous reconnaissant aujourd'hui?
+              Pour quoi êtes-vous reconnaissant aujourd&apos;hui&nbsp;?
             </p>
             <div className="space-y-3">
               {formData.gratitude.map((g, i) => (
@@ -409,8 +406,11 @@ export default function JournalPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() => deleteJournalEntry(entry.id)}
-                      className="p-2 rounded-lg hover:bg-opacity-10"
+                      onClick={() => {
+                        if (window.confirm('Supprimer cette entrée de journal ?')) deleteJournalEntry(entry.id);
+                      }}
+                      aria-label="Supprimer l'entrée"
+                      className="p-2 rounded-lg hover-soft"
                       style={{ color: currentTheme.error }}
                     >
                       <DeleteIcon />
@@ -437,7 +437,7 @@ export default function JournalPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Nouvelle entrée de journal"
+        title={todayEntry ? "Modifier l'entrée du jour" : 'Nouvelle entrée de journal'}
         size="lg"
       >
         <div className="space-y-4">

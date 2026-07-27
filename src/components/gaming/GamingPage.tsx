@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Modal from '@/components/ui/Modal';
-import Badge from '@/components/ui/Badge';
+import Badge, { type BadgeVariant } from '@/components/ui/Badge';
 
 export default function GamingPage() {
   const { currentTheme, games, addGame, updateGame, deleteGame } = useApp();
@@ -83,7 +83,7 @@ export default function GamingPage() {
   };
 
   const getStatusBadge = (status: GameStatus) => {
-    const badges: Record<GameStatus, { label: string; variant: any }> = {
+    const badges: Record<GameStatus, { label: string; variant: BadgeVariant }> = {
       backlog: { label: 'Backlog', variant: 'default' },
       playing: { label: 'En cours', variant: 'primary' },
       completed: { label: 'Terminé', variant: 'success' },

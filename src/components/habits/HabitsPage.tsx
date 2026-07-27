@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useToday } from '@/hooks/useToday';
 import { Habit, HabitCategory, HabitFrequency } from '@/types';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -18,7 +19,7 @@ export default function HabitsPage() {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [showCompleted, setShowCompleted] = useState(true);
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = useToday();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -99,6 +100,7 @@ export default function HabitsPage() {
   };
 
   const handleComplete = (habitId: string) => {
+    if (!today) return;
     completeHabit(habitId, today);
   };
 
@@ -236,14 +238,20 @@ export default function HabitsPage() {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleEdit(habit)}
-                        className="p-2 rounded-lg hover:bg-opacity-10 transition-colors"
+                        aria-label={`Modifier ${habit.title}`}
+                        className="p-2 rounded-lg transition-colors hover-soft"
                         style={{ color: currentTheme.textSecondary }}
                       >
                         <EditIcon />
                       </button>
                       <button
-                        onClick={() => deleteHabit(habit.id)}
-                        className="p-2 rounded-lg hover:bg-opacity-10 transition-colors"
+                        onClick={() => {
+                          if (window.confirm(`Supprimer l'habitude « ${habit.title} » ? Cette action est irréversible.`)) {
+                            deleteHabit(habit.id);
+                          }
+                        }}
+                        aria-label={`Supprimer ${habit.title}`}
+                        className="p-2 rounded-lg transition-colors hover-soft"
                         style={{ color: currentTheme.error }}
                       >
                         <DeleteIcon />

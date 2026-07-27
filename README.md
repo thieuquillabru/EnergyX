@@ -2,8 +2,15 @@
 
 ![EnergyX Logo](https://img.shields.io/badge/EnergyX-Développement%20Personnel-0ea5e9?style=for-the-badge)
 [![PWA](https://img.shields.io/badge/PWA-Installable-4CAF50?style=for-the-badge)](https://developer.mozilla.org/fr/docs/Web/Progressive_web_apps)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/thieuquillabru/EnergyX)
-[![GitHub deployments](https://img.shields.io/github/deployments/thieuquillabru/EnergyX/production)](https://github.com/thieuquillabru/EnergyX/deployments)
+[![Deploy to GitHub Pages](https://github.com/thieuquillabru/EnergyX/actions/workflows/deploy.yml/badge.svg)](https://github.com/thieuquillabru/EnergyX/actions/workflows/deploy.yml)
+
+## 🚀 Utiliser l'application
+
+**👉 [Ouvrir EnergyX](https://thieuquillabru.github.io/EnergyX/)**
+
+Aucune installation, aucun compte, aucun serveur : l'application tourne
+entièrement dans votre navigateur et vos données restent sur votre appareil
+(stockage local).
 
 EnergyX est une application web complète de développement personnel, mentale et physique. Elle vous permet de gérer tous les aspects de votre vie : habitudes, objectifs, santé, passions, apprentissage et bien plus encore.
 
@@ -24,14 +31,9 @@ EnergyX est une **PWA installable** ! Vous pouvez l'installer sur votre appareil
 2. Cliquez sur "Installer" ou sur "Ajouter à l'écran d'accueil"
 3. L'app apparaîtra comme une icône native !
 
-### Option 1 : Deployer avec Vercel (Recommandé)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/thieuquillabru/EnergyX)
-
-1. Cliquez sur le bouton "Deploy with Vercel" ci-dessus
-2. Connectez votre compte GitHub si ce n'est pas déjà fait
-3. Cliquez sur "Create"
-4. Votre application sera déployée automatiquement !
+**Sur PC (Chrome / Edge) :**
+1. Ouvrez [l'application](https://thieuquillabru.github.io/EnergyX/)
+2. Cliquez sur l'icône d'installation dans la barre d'adresse
 
 ## ✨ Fonctionnalités
 
@@ -119,50 +121,11 @@ EnergyX est une **PWA installable** ! Vous pouvez l'installer sur votre appareil
 - Création de thèmes personnalisés
 - Mode clair/foncé adaptatif
 
-## 🚀 Installation
+## 🛠️ Développement local
 
 ```bash
 # Cloner le repository
 git clone https://github.com/thieuquillabru/EnergyX.git
-cd EnergyX
-```
-
-### Option 2 : Installation locale avec Vercel CLI
-
-```bash
-# Installer Vercel CLI
-npm install -g vercel
-
-# Se connecter à Vercel
-vercel login
-
-# Déployer
-vercel
-
-# Déployer en production
-vercel --prod
-```
-
-### Option 3 : Docker
-
-```bash
-# Build l'image
-docker build -t energyx .
-
-# Run le conteneur
-docker run -p 3000:3000 energyx
-```
-
-### Option 4 : Autre hébergeur (Netlify, Railway, etc.)
-
-1. Poussez le code sur GitHub
-2. Connectez votre repo à votre hébergeur préféré
-3. Les paramètres par défaut devraient fonctionner :
-   - Build command: `npm run build`
-   - Output directory: `.next`
-   - Install command: `npm install`
-
-# Aller dans le dossier
 cd EnergyX
 
 # Installer les dépendances
@@ -174,6 +137,39 @@ npm run dev
 
 L'application sera disponible sur [http://localhost:3000](http://localhost:3000)
 
+Autres commandes utiles :
+
+```bash
+npm run build   # génère le site statique dans out/
+npm run lint    # vérifie le code
+```
+
+## 📦 Déploiement
+
+Le site est **déployé automatiquement sur GitHub Pages** à chaque push sur
+`main`, via le workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
+
+L'application est exportée en statique (`output: 'export'`), il n'y a donc
+aucun serveur à gérer et aucun hébergeur tiers n'est nécessaire.
+
+### Activer GitHub Pages (à faire une seule fois)
+
+1. Aller dans **Settings → Pages** du repository
+2. Dans **Build and deployment → Source**, choisir **GitHub Actions**
+3. Pousser sur `main` : le site est publié sur
+   `https://<votre-utilisateur>.github.io/EnergyX/`
+
+> Le chemin de base est injecté au build via la variable
+> `NEXT_PUBLIC_BASE_PATH`. En local elle est vide, ce qui permet de continuer
+> à travailler sur `http://localhost:3000/`.
+
+### Héberger ailleurs
+
+Le dossier `out/` produit par `npm run build` est un site statique classique :
+il peut être servi par n'importe quel hébergeur (Netlify, Cloudflare Pages,
+un simple serveur nginx, …). Pensez à définir `NEXT_PUBLIC_BASE_PATH` si le
+site n'est pas servi à la racine du domaine.
+
 ## 🛠️ Technologies
 
 - **Framework**: Next.js 16 (App Router)
@@ -181,11 +177,12 @@ L'application sera disponible sur [http://localhost:3000](http://localhost:3000)
 - **Styling**: Tailwind CSS
 - **State Management**: React Context API
 - **Storage**: LocalStorage (persistance locale)
-- **Build**: Turbopack
+- **Build**: Turbopack (export statique)
+- **Hébergement**: GitHub Pages
 
 ## 📱 Fonctionnalités à venir
 
-- [ ] Mode hors-ligne (PWA)
+- [x] Mode hors-ligne (PWA)
 - [ ] Synchronisation cloud
 - [ ] Rappels push
 - [ ] Widgets de bureau

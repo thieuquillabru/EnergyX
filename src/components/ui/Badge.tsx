@@ -3,9 +3,11 @@
 import React from 'react';
 import { useApp } from '@/context/AppContext';
 
+export type BadgeVariant = 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+  variant?: BadgeVariant;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   onClick?: () => void;

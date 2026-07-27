@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Challenge } from '@/types';
+import { useToday } from '@/hooks/useToday';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -22,12 +22,22 @@ export default function MotivationPage() {
     return result;
   }, [quotes, filterCategory, showFavorites]);
 
+  // A "shuffle counter" instead of Math.random() during render: the featured
+  // quote is derived from the day, and the user can cycle through the list.
+  const today = useToday();
+  const [shuffleOffset, setShuffleOffset] = useState(0);
+  const pickFeaturedQuote = () => setShuffleOffset(o => o + 1);
+
+  const featuredQuote = useMemo(() => {
+    if (quotes.length === 0) return null;
+    const seed = today
+      ? today.split('-').reduce((acc, part) => acc + parseInt(part, 10), 0)
+      : 0;
+    return quotes[(seed + shuffleOffset) % quotes.length];
+  }, [quotes, today, shuffleOffset]);
+
   const activeChallenges = challenges.filter(c => !c.completed);
   const completedChallenges = challenges.filter(c => c.completed);
-
-  const handleJoinChallenge = (challengeId: string) => {
-    updateChallenge(challengeId, { progress: 0 });
-  };
 
   return (
     <div className="p-6 space-y-6">
@@ -37,10 +47,20 @@ export default function MotivationPage() {
       </div>
 
       {/* Random Quote */}
-      <Card style={{ backgroundColor: currentTheme.primary }} className="text-center">
-        <p className="text-4xl mb-4">"{quotes[Math.floor(Math.random() * quotes.length)]?.text}"</p>
-        <p className="text-white/80">— {quotes[Math.floor(Math.random() * quotes.length)]?.author}</p>
-      </Card>
+      {featuredQuote && (
+        <Card style={{ backgroundColor: currentTheme.primary }} className="text-center">
+          <p className="text-2xl md:text-3xl mb-4 text-white italic">
+            &laquo;&nbsp;{featuredQuote.text}&nbsp;&raquo;
+          </p>
+          <p className="text-white/80">— {featuredQuote.author}</p>
+          <button
+            onClick={pickFeaturedQuote}
+            className="mt-4 px-4 py-2 rounded-xl text-sm font-medium bg-white/20 text-white hover:bg-white/30 transition-colors"
+          >
+            🔄 Une autre citation
+          </button>
+        </Card>
+      )}
 
       {/* Challenges */}
       <div>
@@ -128,7 +148,7 @@ export default function MotivationPage() {
                 {quote.isFavorite ? '⭐' : '☆'}
               </button>
               <blockquote className="pr-8">
-                <p className="text-lg italic mb-2" style={{ color: currentTheme.text }}>"{quote.text}"</p>
+                <p className="text-lg italic mb-2" style={{ color: currentTheme.text }}>&laquo;&nbsp;{quote.text}&nbsp;&raquo;</p>
                 <footer style={{ color: currentTheme.textSecondary }}>— {quote.author}</footer>
               </blockquote>
               <Badge size="sm" className="mt-3 capitalize">{quote.category}</Badge>
@@ -145,7 +165,7 @@ export default function MotivationPage() {
           <p>2. Décomposez vos grands objectifs en petites étapes réalisables.</p>
           <p>3. Célébrez vos petites victoires - chaque progrès compte!</p>
           <p>4. Entourez-vous de personnes positives qui vous inspirent.</p>
-          <p>5. N'oubliez pas de prendre des pauses pour maintenir votre motivation.</p>
+          <p>5. N&apos;oubliez pas de prendre des pauses pour maintenir votre motivation.</p>
         </div>
       </Card>
     </div>

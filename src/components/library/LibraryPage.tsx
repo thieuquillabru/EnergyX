@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Modal from '@/components/ui/Modal';
-import Badge from '@/components/ui/Badge';
+import Badge, { type BadgeVariant } from '@/components/ui/Badge';
 import ProgressBar from '@/components/ui/ProgressBar';
 
 export default function LibraryPage() {
@@ -97,7 +97,7 @@ export default function LibraryPage() {
   };
 
   const getStatusBadge = (status: BookStatus) => {
-    const badges: Record<BookStatus, { label: string; variant: any }> = {
+    const badges: Record<BookStatus, { label: string; variant: BadgeVariant }> = {
       want_to_read: { label: 'À lire', variant: 'default' },
       reading: { label: 'En cours', variant: 'primary' },
       completed: { label: 'Terminé', variant: 'success' },

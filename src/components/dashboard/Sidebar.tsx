@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 
 interface SidebarProps {
@@ -97,6 +97,25 @@ const icons: Record<string, React.ReactNode> = {
 export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   const { currentTheme, user } = useApp();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Close the mobile drawer with the Escape key
+  useEffect(() => {
+    if (!isMobileOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMobileOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isMobileOpen]);
+
+  const handleNavigate = (page: string) => {
+    onNavigate(page);
+    setIsMobileOpen(false);
+  };
+
+  const xpNeeded = Math.max(user.stats.level, 1) * 100;
+  const xpPercent = Math.min(100, Math.max(0, (user.stats.xp / xpNeeded) * 100));
 
   const categories = [
     { id: 'main', label: 'Principal' },
@@ -108,10 +127,34 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   ];
 
   return (
-    <aside
-      className={`h-screen sticky top-0 flex flex-col transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}
-      style={{ backgroundColor: currentTheme.surface, borderRight: `1px solid ${currentTheme.border}` }}
-    >
+    <>
+      {/* Mobile menu button */}
+      <button
+        onClick={() => setIsMobileOpen(true)}
+        aria-label="Ouvrir le menu"
+        className="md:hidden fixed top-4 left-4 z-40 w-11 h-11 rounded-xl flex items-center justify-center shadow-lg"
+        style={{ backgroundColor: currentTheme.primary, color: 'white' }}
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Mobile backdrop */}
+      {isMobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/50"
+          onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`h-screen flex flex-col transition-transform duration-300 z-50 fixed inset-y-0 left-0 w-64 md:sticky md:top-0 md:z-auto md:translate-x-0 md:transition-all ${
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } ${isCollapsed ? 'md:w-20' : 'md:w-64'}`}
+        style={{ backgroundColor: currentTheme.surface, borderRight: `1px solid ${currentTheme.border}` }}
+      >
       {/* Logo */}
       <div className="p-4 flex items-center gap-3">
         <div
@@ -120,7 +163,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         >
           E
         </div>
-        {!isCollapsed && (
+        {(!isCollapsed || isMobileOpen) && (
           <div>
             <h1 className="font-bold text-lg" style={{ color: currentTheme.text }}>EnergyX</h1>
             <p className="text-xs" style={{ color: currentTheme.textSecondary }}>Développement Personnel</p>
@@ -129,7 +172,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       </div>
 
       {/* User Info */}
-      {!isCollapsed && (
+      {(!isCollapsed || isMobileOpen) && (
         <div className="mx-4 p-3 rounded-xl mb-4" style={{ backgroundColor: currentTheme.background }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: currentTheme.primary }}>
@@ -144,11 +187,11 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
             <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: currentTheme.border }}>
               <div
                 className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${(user.stats.xp / (user.stats.level * 100)) * 100}%`, backgroundColor: currentTheme.primary }}
+                style={{ width: `${xpPercent}%`, backgroundColor: currentTheme.primary }}
               />
             </div>
             <p className="text-xs mt-1" style={{ color: currentTheme.textSecondary }}>
-              {user.stats.xp} / {user.stats.level * 100} XP
+              {user.stats.xp} / {xpNeeded} XP
             </p>
           </div>
         </div>
@@ -162,7 +205,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
           
           return (
             <div key={category.id} className="mb-4">
-              {!isCollapsed && (
+              {(!isCollapsed || isMobileOpen) && (
                 <p className="px-3 text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: currentTheme.textSecondary }}>
                   {category.label}
                 </p>
@@ -170,17 +213,19 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
               {items.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => onNavigate(item.id)}
+                  onClick={() => handleNavigate(item.id)}
+                  aria-current={currentPage === item.id ? 'page' : undefined}
+                  title={item.label}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 transition-all duration-200 ${
                     currentPage === item.id ? 'shadow-md' : 'hover:scale-102'
-                  }`}
+                  } ${isCollapsed && !isMobileOpen ? 'md:justify-center' : ''}`}
                   style={{
                     backgroundColor: currentPage === item.id ? currentTheme.primary : 'transparent',
                     color: currentPage === item.id ? 'white' : currentTheme.text,
                   }}
                 >
                   {icons[item.icon]}
-                  {!isCollapsed && <span className="font-medium">{item.label}</span>}
+                  {(!isCollapsed || isMobileOpen) && <span className="font-medium">{item.label}</span>}
                 </button>
               ))}
             </div>
@@ -188,10 +233,24 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         })}
       </nav>
 
-      {/* Toggle Button */}
+      {/* Close button (mobile) */}
+      <button
+        onClick={() => setIsMobileOpen(false)}
+        aria-label="Fermer le menu"
+        className="md:hidden p-4 flex items-center justify-center gap-2 border-t transition-colors"
+        style={{ borderColor: currentTheme.border, color: currentTheme.textSecondary }}
+      >
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span className="font-medium">Fermer</span>
+      </button>
+
+      {/* Toggle Button (desktop) */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="p-4 flex items-center justify-center border-t transition-colors"
+        aria-label={isCollapsed ? 'Déplier le menu' : 'Replier le menu'}
+        className="hidden md:flex p-4 items-center justify-center border-t transition-colors"
         style={{ borderColor: currentTheme.border, color: currentTheme.textSecondary }}
       >
         <svg
@@ -203,6 +262,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
         </svg>
       </button>
-    </aside>
+      </aside>
+    </>
   );
 }

@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
   --background: #f0f9ff;
   --foreground: #0f172a;
@@ -46,20 +42,35 @@ body {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
+    line-clamp: 1;
   }
-  
+
   .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
-  
+
   .line-clamp-3 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -105,6 +116,16 @@ body {
 
 .animate-pulse {
   animation: pulse 2s ease-in-out infinite;
+}
+
+/* Subtle hover feedback that works on any themed background
+   (replaces Tailwind v3's removed `bg-opacity-*` utilities) */
+.hover-soft {
+  transition: background-color 0.2s ease;
+}
+
+.hover-soft:hover {
+  background-color: color-mix(in srgb, currentColor 12%, transparent);
 }
 
 /* Custom utilities */

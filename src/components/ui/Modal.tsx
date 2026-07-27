@@ -2,7 +2,6 @@
 
 import React, { useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
-import Button from './Button';
 
 interface ModalProps {
   isOpen: boolean;
@@ -41,7 +40,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', s
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
       
@@ -61,7 +60,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md', s
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-2 rounded-full transition-colors hover:bg-opacity-10"
+                className="p-2 rounded-full transition-colors hover-soft"
                 style={{ color: currentTheme.textSecondary }}
                 aria-label="Fermer"
               >

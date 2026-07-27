@@ -9,10 +9,9 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
-import ProgressBar from '@/components/ui/ProgressBar';
 
 export default function FitnessPage() {
-  const { currentTheme, workouts, addWorkout, deleteWorkout, user } = useApp();
+  const { currentTheme, workouts, addWorkout, deleteWorkout } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 

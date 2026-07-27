@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
+import { useToday } from '@/hooks/useToday';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
@@ -10,7 +11,7 @@ import Badge from '@/components/ui/Badge';
 type TimerMode = 'focus' | 'short_break' | 'long_break';
 
 export default function TimerPage() {
-  const { currentTheme, pomodoroSettings, setPomodoroSettings, pomodoroSessions, addPomodoroSession, pomodoroSessions: sessions } = useApp();
+  const { currentTheme, pomodoroSettings, setPomodoroSettings, pomodoroSessions: sessions, addPomodoroSession } = useApp();
   const [mode, setMode] = useState<TimerMode>('focus');
   const [timeLeft, setTimeLeft] = useState(pomodoroSettings.focusDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
@@ -19,8 +20,10 @@ export default function TimerPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showStats, setShowStats] = useState(false);
 
-  const today = new Date().toISOString().split('T')[0];
-  const todayPomodoros = sessions.filter(s => s.completedAt.startsWith(today) && s.type === 'focus').length;
+  const today = useToday();
+  const todayPomodoros = today
+    ? sessions.filter(s => s.completedAt.startsWith(today) && s.type === 'focus').length
+    : 0;
 
   const getModeSettings = useCallback(() => {
     switch (mode) {
@@ -33,17 +36,51 @@ export default function TimerPage() {
     }
   }, [mode, pomodoroSettings, currentTheme]);
 
+  // Keep the completion handler in a ref so the interval effect never
+  // depends on a function identity that changes on every render.
+  const handleTimerCompleteRef = useRef<() => void>(() => {});
+
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      handleTimerComplete();
-    }
+    if (!isRunning) return;
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          // defer so we never setState of another component while rendering
+          queueMicrotask(() => handleTimerCompleteRef.current());
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => clearInterval(interval);
-  }, [isRunning, timeLeft]);
+  }, [isRunning]);
+
+  const playNotificationSound = () => {
+    // Simple beep sound using Web Audio API
+    try {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+      const audioContext = new AudioCtx();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+      oscillator.onended = () => audioContext.close();
+    } catch {
+      console.warn('Could not play notification sound');
+    }
+  };
 
   const handleTimerComplete = () => {
     setIsRunning(false);
@@ -81,24 +118,9 @@ export default function TimerPage() {
     }
   };
 
-  const playNotificationSound = () => {
-    // Simple beep sound using Web Audio API
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      oscillator.frequency.value = 800;
-      oscillator.type = 'sine';
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
-    } catch (e) {
-      console.log('Could not play notification sound');
-    }
-  };
+  useEffect(() => {
+    handleTimerCompleteRef.current = handleTimerComplete;
+  });
 
   const startTimer = () => setIsRunning(true);
   const pauseTimer = () => setIsRunning(false);
@@ -131,11 +153,17 @@ export default function TimerPage() {
 
   const getProgress = () => {
     const total = getModeSettings().duration * 60;
-    return ((total - timeLeft) / total) * 100;
+    if (total <= 0) return 0;
+    return Math.min(100, Math.max(0, ((total - timeLeft) / total) * 100));
   };
 
-  // Settings form
+  // Settings form (re-synced each time the modal is opened)
   const [settingsForm, setSettingsForm] = useState(pomodoroSettings);
+
+  const openSettings = () => {
+    setSettingsForm(pomodoroSettings);
+    setShowSettings(true);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -151,7 +179,7 @@ export default function TimerPage() {
           <Button variant="outline" size="sm" onClick={() => setShowStats(true)}>
             📊 Statistiques
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setShowSettings(true)}>
+          <Button variant="ghost" size="sm" onClick={openSettings}>
             ⚙️ Paramètres
           </Button>
         </div>
@@ -161,7 +189,7 @@ export default function TimerPage() {
       <div className="grid grid-cols-3 gap-4">
         <Card padding="sm" className="text-center">
           <p className="text-3xl font-bold" style={{ color: currentTheme.primary }}>{todayPomodoros}</p>
-          <p className="text-sm" style={{ color: currentTheme.textSecondary }}>Pomodoros aujourd'hui</p>
+          <p className="text-sm" style={{ color: currentTheme.textSecondary }}>Pomodoros aujourd&apos;hui</p>
         </Card>
         <Card padding="sm" className="text-center">
           <p className="text-3xl font-bold" style={{ color: currentTheme.success }}>{sessionsCompleted}</p>
@@ -373,7 +401,14 @@ export default function TimerPage() {
             <Button onClick={() => {
               setPomodoroSettings(settingsForm);
               setShowSettings(false);
-              resetTimer();
+              setIsRunning(false);
+              setTimeLeft(
+                (mode === 'focus'
+                  ? settingsForm.focusDuration
+                  : mode === 'short_break'
+                    ? settingsForm.shortBreakDuration
+                    : settingsForm.longBreakDuration) * 60
+              );
             }} className="flex-1">
               Enregistrer
             </Button>

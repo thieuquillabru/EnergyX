@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import type { Passion } from '@/types';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -14,7 +15,7 @@ export default function ProfilePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPassionModalOpen, setIsPassionModalOpen] = useState(false);
   const [editForm, setEditForm] = useState({ name: user.name });
-  const [passionForm, setPassionForm] = useState({ name: '', icon: '⭐', category: 'other' as any, color: currentTheme.primary });
+  const [passionForm, setPassionForm] = useState({ name: '', icon: '⭐', category: 'other' as Passion['category'], color: currentTheme.primary });
 
   const xpNeeded = user.stats.level * 100;
   const xpProgress = (user.stats.xp / xpNeeded) * 100;

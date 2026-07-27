@@ -1,118 +1,119 @@
-const CACHE_NAME = 'energyx-v1';
+/**
+ * EnergyX service worker.
+ *
+ * The scope is derived from the worker's own location, so the same file works
+ * whether the app is served from the domain root (`/`) or from a GitHub Pages
+ * project sub-path (`/EnergyX/`).
+ */
+const SCOPE = new URL('./', self.location).pathname; // e.g. "/" or "/EnergyX/"
+const CACHE_NAME = 'energyx-v2';
+
 const STATIC_ASSETS = [
-  '/',
-  '/manifest.json',
-  '/favicon.svg',
-  '/icons/icon-192x192.svg',
-  '/icons/icon-512x512.svg',
+  SCOPE,
+  `${SCOPE}manifest.webmanifest`,
+  `${SCOPE}favicon.svg`,
+  `${SCOPE}icons/icon-192x192.svg`,
+  `${SCOPE}icons/icon-512x512.svg`,
 ];
 
-// Install event - cache static assets
+// Install - pre-cache the shell. Individual failures must not abort install.
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(STATIC_ASSETS.map((asset) => cache.add(asset)))
+    )
   );
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate - drop caches from previous versions
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      );
-    })
+    caches
+      .keys()
+      .then((names) =>
+        Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+      )
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch - network-first for navigations (so users get fresh HTML),
+// stale-while-revalidate for everything else.
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') return;
+  const { request } = event;
 
-  // Skip API calls and external requests
-  const url = new URL(event.request.url);
-  if (url.origin !== location.origin) return;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Navigations: try the network, fall back to the cached app shell offline.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || (await caches.match(SCOPE)) || Response.error();
+        })
+    );
+    return;
+  }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // Return cached response if available
-      if (cachedResponse) {
-        // Fetch in background to update cache
-        fetch(event.request).then((response) => {
-          if (response && response.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, response);
-            });
+    caches.match(request).then((cachedResponse) => {
+      const networkFetch = fetch(request)
+        .then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           }
-        }).catch(() => {});
-        return cachedResponse;
-      }
-
-      // Otherwise fetch from network
-      return fetch(event.request).then((response) => {
-        // Don't cache non-successful responses
-        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
-        }
+        })
+        .catch(() => cachedResponse);
 
-        // Clone response to cache it
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return response;
-      }).catch(() => {
-        // Return offline page if available
-        return caches.match('/');
-      });
+      return cachedResponse || networkFetch;
     })
   );
 });
 
-// Handle push notifications (for future use)
+// Push notifications (reserved for a future release)
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
-  const data = event.data.json();
-  const options = {
-    body: data.body || 'Vous avez une nouvelle notification',
-    icon: '/icons/icon-192x192.svg',
-    badge: '/icons/icon-72x72.svg',
-    vibrate: [100, 50, 100],
-    data: {
-      url: data.url || '/',
-    },
-  };
+  let data = {};
+  try {
+    data = event.data.json();
+  } catch {
+    data = { body: event.data.text() };
+  }
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'EnergyX', options)
+    self.registration.showNotification(data.title || 'EnergyX', {
+      body: data.body || 'Vous avez une nouvelle notification',
+      icon: `${SCOPE}icons/icon-192x192.svg`,
+      badge: `${SCOPE}icons/icon-192x192.svg`,
+      vibrate: [100, 50, 100],
+      data: { url: data.url || SCOPE },
+    })
   );
 });
 
-// Handle notification clicks
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const target = event.notification.data?.url || SCOPE;
+
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) return client.focus();
+      }
+      return self.clients.openWindow(target);
+    })
   );
 });
-
-// Background sync (for future use with offline data)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-data') {
-    event.waitUntil(syncData());
-  }
-});
-
-async function syncData() {
-  // This would sync local data with a server in the future
-  console.log('Background sync triggered');
-}

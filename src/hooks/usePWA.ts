@@ -1,131 +1,137 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-interface PWAInstallPrompt {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+type NavigatorWithStandalone = Navigator & { standalone?: boolean };
+
+const STANDALONE_QUERY = '(display-mode: standalone)';
+
+/* -------------------------------------------------------------------------
+ * External stores
+ * useSyncExternalStore keeps the React state in sync with the browser APIs
+ * without calling setState from inside an effect, and returns a stable
+ * server snapshot so hydration never mismatches.
+ * ---------------------------------------------------------------------- */
+
+function subscribeOnline(onChange: () => void) {
+  window.addEventListener('online', onChange);
+  window.addEventListener('offline', onChange);
+  return () => {
+    window.removeEventListener('online', onChange);
+    window.removeEventListener('offline', onChange);
+  };
+}
+
+function subscribeStandalone(onChange: () => void) {
+  const mediaQuery = window.matchMedia(STANDALONE_QUERY);
+  mediaQuery.addEventListener('change', onChange);
+  window.addEventListener('appinstalled', onChange);
+  return () => {
+    mediaQuery.removeEventListener('change', onChange);
+    window.removeEventListener('appinstalled', onChange);
+  };
+}
+
 export function usePWA() {
-  const [isOnline, setIsOnline] = useState(true);
-  const [isPWAInstalled, setIsPWAInstalled] = useState(false);
-  const [canInstall, setCanInstall] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState<PWAInstallPrompt | null>(null);
+  const isOnline = useSyncExternalStore(
+    subscribeOnline,
+    () => navigator.onLine,
+    () => true // assume online while server-rendering
+  );
 
+  const isDisplayStandalone = useSyncExternalStore(
+    subscribeStandalone,
+    () =>
+      window.matchMedia(STANDALONE_QUERY).matches ||
+      (window.navigator as NavigatorWithStandalone).standalone === true,
+    () => false
+  );
+
+  const [installAccepted, setInstallAccepted] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  const isPWAInstalled = isDisplayStandalone || installAccepted;
+
+  // Register the service worker once. The base path keeps this working both
+  // locally and on a GitHub Pages project site (/EnergyX/).
   useEffect(() => {
-    // Check if already installed
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    setIsPWAInstalled(isStandalone || (window.navigator as any).standalone === true);
+    if (!('serviceWorker' in navigator)) return;
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+    navigator.serviceWorker
+      .register(`${basePath}/sw.js`, { scope: `${basePath}/` })
+      .catch((error) => console.warn('SW registration failed:', error));
+  }, []);
 
-    // Online status
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    setIsOnline(navigator.onLine);
-
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((registration) => {
-          console.log('SW registered:', registration.scope);
-        })
-        .catch((error) => {
-          console.log('SW registration failed:', error);
-        });
-    }
-
-    // Handle install prompt
+  // Capture the install prompt so we can trigger it from our own UI.
+  useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e as BeforeInstallPromptEvent);
-      setCanInstall(true);
     };
+    const handleAppInstalled = () => setInstallPrompt(null);
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    // Detect when app is installed
-    const handleAppInstalled = () => {
-      setIsPWAInstalled(true);
-      setCanInstall(false);
-    };
-
     window.addEventListener('appinstalled', handleAppInstalled);
-
-    // Listen for display mode changes
-    const mediaQuery = window.matchMedia('(display-mode: standalone)');
-    const handleDisplayModeChange = (e: MediaQueryListEvent) => {
-      setIsPWAInstalled(e.matches);
-    };
-    mediaQuery.addEventListener('change', handleDisplayModeChange);
-
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
-      mediaQuery.removeEventListener('change', handleDisplayModeChange);
     };
   }, []);
 
-  const installApp = async () => {
+  const installApp = useCallback(async () => {
     if (!installPrompt) return false;
-
     try {
       await installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
+      setInstallPrompt(null);
       if (outcome === 'accepted') {
-        setCanInstall(false);
-        setIsPWAInstalled(true);
+        setInstallAccepted(true);
         return true;
       }
     } catch (error) {
       console.error('Install prompt failed:', error);
     }
     return false;
-  };
+  }, [installPrompt]);
 
   return {
     isOnline,
     isPWAInstalled,
-    canInstall,
+    canInstall: installPrompt !== null && !isPWAInstalled,
     installApp,
   };
 }
 
 // Hook for notification permission
 export function useNotifications() {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const permission = useSyncExternalStore(
+    // Permission changes are rare and have no reliable event; a no-op
+    // subscribe is fine because requestPermission forces a re-read.
+    () => () => {},
+    () => (typeof Notification !== 'undefined' ? Notification.permission : 'default'),
+    () => 'default' as NotificationPermission
+  );
+  const [, forceUpdate] = useState(0);
 
-  useEffect(() => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
-    }
-  }, []);
-
-  const requestPermission = async () => {
-    if (!('Notification' in window)) {
-      console.log('This browser does not support notifications');
+  const requestPermission = useCallback(async () => {
+    if (typeof Notification === 'undefined') {
+      console.warn('This browser does not support notifications');
       return false;
     }
-
     try {
       const result = await Notification.requestPermission();
-      setPermission(result);
+      forceUpdate((n) => n + 1);
       return result === 'granted';
     } catch (error) {
       console.error('Notification permission error:', error);
       return false;
     }
-  };
+  }, []);
 
   return { permission, requestPermission };
 }

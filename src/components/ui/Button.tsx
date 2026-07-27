@@ -19,8 +19,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const variants = {
       primary: `text-white shadow-lg hover:shadow-xl active:scale-95`,
       secondary: `text-white shadow-md hover:shadow-lg active:scale-95`,
-      outline: `border-2 hover:bg-opacity-10 active:scale-95`,
-      ghost: `hover:bg-opacity-10 active:scale-95`,
+      outline: `border-2 hover-soft active:scale-95`,
+      ghost: `hover-soft active:scale-95`,
       danger: `text-white shadow-lg hover:shadow-xl active:scale-95`,
     };
 

@@ -4,24 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { usePWA } from '@/hooks/usePWA';
 import { useApp } from '@/context/AppContext';
 
+const DISMISS_KEY = 'pwa-install-dismissed';
+const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000;
+
 export default function PWAInstallPrompt() {
-  const { canInstall, installApp, isPWAInstalled, isOnline } = usePWA();
+  const { canInstall, installApp, isPWAInstalled } = usePWA();
   const { currentTheme } = useApp();
   const [showPrompt, setShowPrompt] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
 
-  useEffect(() => {
-    // Check if user has dismissed the prompt before
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
-    if (dismissed) {
-      const dismissedDate = parseInt(dismissed);
-      const now = Date.now();
-      const dayInMs = 24 * 60 * 60 * 1000;
-      if (now - dismissedDate < dayInMs) {
-        setIsDismissed(true);
-      }
-    }
-  }, []);
+  // Read the "dismissed" flag lazily so we never setState from an effect.
+  const [isDismissed, setIsDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const dismissed = window.localStorage.getItem(DISMISS_KEY);
+    if (!dismissed) return false;
+    const dismissedAt = parseInt(dismissed, 10);
+    if (Number.isNaN(dismissedAt)) return false;
+    return Date.now() - dismissedAt < DISMISS_DURATION_MS;
+  });
 
   useEffect(() => {
     if (canInstall && !isPWAInstalled && !isDismissed) {
@@ -42,7 +41,7 @@ export default function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+    localStorage.setItem(DISMISS_KEY, Date.now().toString());
     setIsDismissed(true);
   };
 
@@ -67,13 +66,13 @@ export default function PWAInstallPrompt() {
               Installer EnergyX
             </h3>
             <p className="text-sm" style={{ color: currentTheme.textSecondary }}>
-              Ajouter à l'écran d'accueil
+              Ajouter à l&apos;écran d&apos;accueil
             </p>
           </div>
         </div>
         <button
           onClick={handleDismiss}
-          className="p-1 rounded-full hover:bg-opacity-10 transition-colors"
+          className="p-1 rounded-full transition-colors hover-soft"
           style={{ color: currentTheme.textSecondary }}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -85,14 +84,14 @@ export default function PWAInstallPrompt() {
       {/* Description */}
       <p className="text-sm mb-4" style={{ color: currentTheme.textSecondary }}>
         Installez EnergyX sur votre appareil pour une expérience optimale, 
-        même hors ligne. L'app apparaîtra comme une application native.
+        même hors ligne. L&apos;app apparaîtra comme une application native.
       </p>
 
       {/* Features */}
       <ul className="text-sm mb-4 space-y-2" style={{ color: currentTheme.textSecondary }}>
         <li className="flex items-center gap-2">
           <span style={{ color: currentTheme.success }}>✓</span>
-          Accès rapide depuis l'écran d'accueil
+          Accès rapide depuis l&apos;écran d&apos;accueil
         </li>
         <li className="flex items-center gap-2">
           <span style={{ color: currentTheme.success }}>✓</span>

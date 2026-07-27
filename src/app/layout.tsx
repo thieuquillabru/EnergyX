@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+// Empty locally, "/EnergyX" on GitHub Pages. Next prefixes `manifest` and the
+// metadata `icons` automatically, but raw <link>/<meta> tags need it manually.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const metadata: Metadata = {
   title: "EnergyX - Application de Développement Personnel",
   description: "Une application complète pour votre croissance personnelle, mentale et physique. Gérez vos habitudes, objectifs, santé, passions et plus encore.",
@@ -8,7 +12,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Thieu Quilla Bru" }],
   creator: "Thieu Quilla Bru",
   publisher: "EnergyX",
-  manifest: "/manifest.json",
+  manifest: `${basePath}/manifest.webmanifest`,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -36,13 +40,13 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/icons/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml" },
-      { url: "/icons/icon-512x512.svg", sizes: "512x512", type: "image/svg+xml" },
+      { url: `${basePath}/favicon.svg`, type: "image/svg+xml" },
+      { url: `${basePath}/icons/icon-192x192.svg`, sizes: "192x192", type: "image/svg+xml" },
+      { url: `${basePath}/icons/icon-512x512.svg`, sizes: "512x512", type: "image/svg+xml" },
     ],
     apple: [
-      { url: "/icons/icon-192x192.svg", sizes: "192x192" },
-      { url: "/icons/icon-512x512.svg", sizes: "512x512" },
+      { url: `${basePath}/icons/icon-192x192.svg`, sizes: "192x192" },
+      { url: `${basePath}/icons/icon-512x512.svg`, sizes: "512x512" },
     ],
   },
 };
@@ -75,7 +79,7 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
         <meta name="theme-color" content="#0ea5e9" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1e293b" media="(prefers-color-scheme: dark)" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+        <link rel="apple-touch-icon" href={`${basePath}/icons/icon-192x192.svg`} />
       </head>
       <body className="h-full antialiased">{children}</body>
     </html>

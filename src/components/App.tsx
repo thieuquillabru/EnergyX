@@ -19,6 +19,7 @@ import SettingsPage from '@/components/settings/SettingsPage';
 import PWAInstallPrompt, { NetworkStatus } from '@/components/PWAInstallPrompt';
 
 export default function App() {
+  const { currentTheme } = useApp();
   const [currentPage, setCurrentPage] = useState('dashboard');
 
   const renderPage = () => {
@@ -58,7 +59,10 @@ export default function App() {
     <div className="flex min-h-screen">
       <NetworkStatus />
       <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
-      <main className="flex-1 overflow-auto" style={{ backgroundColor: useApp().currentTheme.background }}>
+      <main
+        className="flex-1 overflow-auto min-w-0 pt-16 md:pt-0"
+        style={{ backgroundColor: currentTheme.background }}
+      >
         {renderPage()}
       </main>
       <PWAInstallPrompt />
