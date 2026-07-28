@@ -54,7 +54,10 @@ export function App() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      const swPath = process.env.NEXT_PUBLIC_BASE_PATH
+        ? `${process.env.NEXT_PUBLIC_BASE_PATH}/sw.js`
+        : '/sw.js';
+      navigator.serviceWorker.register(swPath).catch(() => {});
     }
   }, []);
 

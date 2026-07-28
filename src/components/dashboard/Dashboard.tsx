@@ -6,8 +6,7 @@ import { useApp } from '@/context/AppContext';
 import { useToday, useTodayFormatted } from '@/hooks/useToday';
 import { StatCard } from '@/components/ui/StatCard';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { Avatar } from '@/components/ui/AvatarEl';
-import { QUOTES } from '@/lib/constants';
+import { QUOTES, XP_PER_LEVEL } from '@/lib/constants';
 import { format, subDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { CheckCircle, Target, Flame, Droplets, ChevronRight, Zap } from 'lucide-react';
@@ -44,20 +43,19 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     return QUOTES[dayOfYear % QUOTES.length];
   }, [today]);
 
-  // Today's habits
-
   // KPIs
   const totalXP = useMemo(() => xpHistory.reduce((s, h) => s + h.xp, 0), [xpHistory]);
-  const level = Math.floor(totalXP / 500) + 1;
+  const level = Math.floor(totalXP / XP_PER_LEVEL) + 1;
 
   const todayJournal = useMemo(() => journal.find((j) => j.date === today), [journal, today]);
 
   const weekStart = useMemo(() => {
-    const d = today ? new Date(today + 'T12:00:00') : new Date();
+    if (!today) return today;
+    const d = new Date(today + 'T12:00:00');
     const day = d.getDay();
-    const diff = day === 0 ? 6 : day - 1; // Monday
-    return format(subDays(d, diff), 'yyyy-MM-dd');
-  }, [today]);
+    const offset = profile?.weekStart === 'sunday' ? day : (day === 0 ? 6 : day - 1);
+    return format(subDays(d, offset), 'yyyy-MM-dd');
+  }, [today, profile?.weekStart]);
 
   const weekFocus = useMemo(() => {
     return pomodoroSessions

@@ -9,12 +9,11 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { v4 as uuid } from 'uuid';
 import { cn } from '@/lib/utils';
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { BookOpen, Plus, X, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-
 
 type ViewMode = 'today' | 'calendar' | 'list';
 
@@ -31,16 +30,6 @@ export function JournalPage() {
   const sortedEntries = useMemo(() => {
     return [...journal].sort((a, b) => b.date.localeCompare(a.date));
   }, [journal]);
-
-  const sorted = useMemo(() => {
-    const months: Record<string, JournalEntry[]> = {};
-    sortedEntries.forEach((e) => {
-      const m = e.date.slice(0, 7);
-      if (!months[m]) months[m] = [];
-      months[m].push(e);
-    });
-    return Object.entries(months).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [sortedEntries]);
 
   if (!today) return null;
 
@@ -289,33 +278,53 @@ function ListView({ entries }: { entries: JournalEntry[] }) {
 
 function CalendarView({ entries }: { entries: JournalEntry[] }) {
   const dates = new Set(entries.map((e) => e.date));
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth());
+
+  const startOfMonth = new Date(year, month, 1);
+  const offset = startOfMonth.getDay() === 0 ? 6 : startOfMonth.getDay() - 1;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthName = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(startOfMonth);
+
+  const handlePrev = () => {
+    if (month === 0) { setMonth(11); setYear(year - 1); }
+    else setMonth(month - 1);
+  };
+  const handleNext = () => {
+    if (month === 11) { setMonth(0); setYear(year + 1); }
+    else setMonth(month + 1);
+  };
 
   return (
     <div className="rounded-xl border border-border bg-card p-4">
-      <p className="text-sm text-muted-foreground mb-3">
-        {entries.length} entrée{entries.length > 1 ? 's' : ''} dans le journal
-      </p>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-muted-foreground">
+          {entries.length} entrée{entries.length > 1 ? 's' : ''} dans le journal
+        </p>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={handlePrev} className="p-1 rounded hover:bg-accent text-sm">&lsaquo;</button>
+          <span className="text-sm font-medium capitalize">{monthName}</span>
+          <button type="button" onClick={handleNext} className="p-1 rounded hover:bg-accent text-sm">&rsaquo;</button>
+        </div>
+      </div>
       <div className="grid grid-cols-7 gap-1 text-center">
         {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d) => (
           <div key={d} className="text-xs text-muted-foreground font-medium py-1">{d}</div>
         ))}
-        {Array.from({ length: 35 }).map((_, i) => {
-          const base = new Date();
-          const startOfMonth = new Date(base.getFullYear(), base.getMonth(), 1);
-          const offset = startOfMonth.getDay() === 0 ? 6 : startOfMonth.getDay() - 1;
+        {Array.from({ length: 42 }).map((_, i) => {
           const day = i - offset + 1;
-          const dateStr = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const daysInMonth = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
-
           if (day < 1 || day > daysInMonth) return <div key={i} />;
-
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const hasEntry = dates.has(dateStr);
+          const isToday = dateStr === new Date().toISOString().slice(0, 10);
           return (
             <div
               key={i}
               className={cn(
                 'h-8 w-8 rounded flex items-center justify-center text-xs mx-auto',
-                hasEntry ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
+                hasEntry ? 'bg-primary text-primary-foreground' : 'hover:bg-accent',
+                isToday && !hasEntry && 'ring-1 ring-primary/50'
               )}
             >
               {day}

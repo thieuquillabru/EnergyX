@@ -1,4 +1,4 @@
-import type { AchievementDef, AppData } from '@/types';
+import type { AchievementDef, AppData, XPRecord } from '@/types';
 import { format, subDays, differenceInDays } from 'date-fns';
 import { XP_PER_LEVEL } from '@/lib/constants';
 
@@ -48,7 +48,11 @@ export function getLast90Days(): string[] {
 }
 
 export function getTotalXP(data: AppData): number {
-  return data.xpHistory.reduce((sum, h) => sum + h.xp, 0);
+  return getTotalXPFromRecords(data.xpHistory);
+}
+
+export function getTotalXPFromRecords(xpHistory: XPRecord[]): number {
+  return xpHistory.reduce((sum, h) => sum + h.xp, 0);
 }
 
 export function getLevel(totalXP: number): number {

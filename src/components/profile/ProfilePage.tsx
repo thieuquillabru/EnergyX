@@ -1,26 +1,46 @@
 'use client';
 
 import { useMemo } from 'react';
+import { DEFAULT_TIMER_SETTINGS } from '@/lib/constants';
 import { useApp } from '@/context/AppContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Avatar } from '@/components/ui/AvatarEl';
 import { ACHIEVEMENTS } from '@/lib/achievements';
-import { getTotalXP, getLevel, getLevelProgress } from '@/lib/achievements';
+import { getTotalXPFromRecords, getLevel, getLevelProgress } from '@/lib/achievements';
+import type { AppData } from '@/types';
 import { cn } from '@/lib/utils';
+
+const EMPTY: AppData = {
+  profile: null,
+  passions: [],
+  habits: [],
+  goals: [],
+  journal: [],
+  pomodoroSessions: [],
+  timerSettings: DEFAULT_TIMER_SETTINGS,
+  books: [],
+  games: [],
+  skills: [],
+  fitnessSessions: [],
+  meditationSessions: [],
+  favoriteQuotes: [],
+  challenges: [],
+  xpHistory: [],
+  waterToday: 0,
+};
 
 export function ProfilePage() {
   const { profile, habits, journal, pomodoroSessions, goals, books, meditationSessions, skills, xpHistory, passions } = useApp();
 
-  const totalXP = useMemo(() => getTotalXP({ xpHistory } as any), [xpHistory]);
+  const totalXP = useMemo(() => getTotalXPFromRecords(xpHistory), [xpHistory]);
 
   const level = getLevel(totalXP);
   const levelProgress = getLevelProgress(totalXP);
 
   const achievementsState = useMemo(() => {
+    const data = { ...EMPTY, habits, journal, pomodoroSessions, goals, books, meditationSessions, skills, xpHistory };
     return ACHIEVEMENTS.map((a) => {
-      const result = a.compute({
-        habits, journal, pomodoroSessions, goals, books, meditationSessions, skills, xpHistory,
-      } as any);
+      const result = a.compute(data);
       const unlocked = result.current >= result.target;
       return { ...a, current: result.current, target: result.target, unlocked };
     });

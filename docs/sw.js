@@ -2,9 +2,6 @@ const CACHE_NAME = 'energyx-v1';
 const SCOPE = new URL('./', self.location).href;
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(['/']))
-  );
   self.skipWaiting();
 });
 
@@ -37,6 +34,7 @@ self.addEventListener('fetch', (event) => {
         (cached) =>
           cached ||
           fetch(event.request).then((response) => {
+            if (!response.ok) return response;
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
             return response;
@@ -50,6 +48,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
+        if (!response.ok) return response;
         const clone = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         return response;

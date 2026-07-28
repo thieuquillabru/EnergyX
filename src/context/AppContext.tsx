@@ -23,26 +23,6 @@ import { DEFAULT_TIMER_SETTINGS } from '@/lib/constants';
 // ── localStorage helpers ─────────────────────────
 const STORAGE_KEY = 'energyx_data';
 
-function loadAppData(): AppData {
-  try {
-    if (typeof window === 'undefined') return getEmptyState();
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return getEmptyState();
-    const parsed = JSON.parse(raw) as Partial<AppData>;
-    return { ...getEmptyState(), ...parsed };
-  } catch {
-    return getEmptyState();
-  }
-}
-
-function saveAppData(data: AppData): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {
-    // quota exceeded or private browsing
-  }
-}
-
 function getEmptyState(): AppData {
   return {
     profile: null,
@@ -153,9 +133,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const parsed = JSON.parse(raw) as Partial<AppData>;
           const merged = { ...prev, ...parsed };
           const today = format(new Date(), 'yyyy-MM-dd');
-          if ((merged as any)._lastWaterDate !== today) {
-            (merged as any).waterToday = 0;
-            (merged as any)._lastWaterDate = today;
+          const lastWaterDate = (merged as Record<string, unknown>)._lastWaterDate as string | undefined;
+          if (lastWaterDate !== today) {
+            merged.waterToday = 0;
+            (merged as Record<string, unknown>)._lastWaterDate = today;
           }
           return merged;
         }
@@ -408,7 +389,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toggleFavoriteQuote, addChallenge, updateChallenge, deleteChallenge,
     addXP, setWaterToday,
     exportData, importData, resetAll,
-  }), [data, hydrated]);
+  }), [
+    data, hydrated,
+    setProfile, addPassion, removePassion,
+    addHabit, updateHabit, deleteHabit, toggleHabitCompletion,
+    addGoal, updateGoal, deleteGoal,
+    upsertJournalEntry, deleteJournalEntry,
+    addPomodoroSession, setTimerSettings,
+    addBook, updateBook, deleteBook,
+    addGame, updateGame, deleteGame,
+    addSkill, updateSkill, deleteSkill,
+    addFitnessSession, updateFitnessSession, deleteFitnessSession,
+    addMeditationSession, deleteMeditationSession,
+    toggleFavoriteQuote, addChallenge, updateChallenge, deleteChallenge,
+    addXP, setWaterToday,
+    exportData, importData, resetAll,
+  ]);
 
   return (
     <AppContext.Provider value={contextValue}>

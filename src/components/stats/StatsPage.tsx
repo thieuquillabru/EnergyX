@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { AppData } from '@/types';
+import { DEFAULT_TIMER_SETTINGS } from '@/lib/constants';
 import { useApp } from '@/context/AppContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { cn } from '@/lib/utils';
@@ -12,18 +13,37 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 
+const EMPTY_STATE: AppData = {
+  profile: null,
+  passions: [],
+  habits: [],
+  goals: [],
+  journal: [],
+  pomodoroSessions: [],
+  timerSettings: DEFAULT_TIMER_SETTINGS,
+  books: [],
+  games: [],
+  skills: [],
+  fitnessSessions: [],
+  meditationSessions: [],
+  favoriteQuotes: [],
+  challenges: [],
+  xpHistory: [],
+  waterToday: 0,
+};
+
 export function StatsPage() {
   const { habits, journal, pomodoroSessions, fitnessSessions, meditationSessions, books, goals } = useApp();
   const [period, setPeriod] = useState<7 | 30 | 90>(7);
 
   const days = useMemo(() => getPeriodDays(period), [period]);
 
-  const habitRates = useMemo(() => getHabitCompletionRates({ habits } as AppData, days), [habits, days]);
-  const moodTrend = useMemo(() => getMoodTrend({ journal } as AppData, days), [journal, days]);
-  const focusTime = useMemo(() => getFocusTime({ pomodoroSessions } as AppData, days), [pomodoroSessions, days]);
-  const exerciseMeditation = useMemo(() => getExerciseAndMeditation({ fitnessSessions, meditationSessions } as AppData, days), [fitnessSessions, meditationSessions, days]);
-  const categoryBreakdown = useMemo(() => getHabitCategoryBreakdown({ habits } as AppData), [habits]);
-  const summary = useMemo(() => getSummaryStats({ habits, journal, pomodoroSessions, fitnessSessions, meditationSessions, books, goals } as AppData, period), [habits, journal, pomodoroSessions, fitnessSessions, meditationSessions, books, goals, period]);
+  const habitRates = useMemo(() => getHabitCompletionRates({ ...EMPTY_STATE, habits }, days), [habits, days]);
+  const moodTrend = useMemo(() => getMoodTrend({ ...EMPTY_STATE, journal }, days), [journal, days]);
+  const focusTime = useMemo(() => getFocusTime({ ...EMPTY_STATE, pomodoroSessions }, days), [pomodoroSessions, days]);
+  const exerciseMeditation = useMemo(() => getExerciseAndMeditation({ ...EMPTY_STATE, fitnessSessions, meditationSessions }, days), [fitnessSessions, meditationSessions, days]);
+  const categoryBreakdown = useMemo(() => getHabitCategoryBreakdown({ ...EMPTY_STATE, habits }), [habits]);
+  const summary = useMemo(() => getSummaryStats({ ...EMPTY_STATE, habits, journal, pomodoroSessions, fitnessSessions, meditationSessions, books, goals }, period), [habits, journal, pomodoroSessions, fitnessSessions, meditationSessions, books, goals, period]);
 
   const axisStyle = { tick: { fill: 'var(--muted-foreground)', fontSize: 11 }, axisLine: { stroke: 'var(--border)' } };
   const gridStyle = { stroke: 'var(--border)', strokeOpacity: 0.5 };
