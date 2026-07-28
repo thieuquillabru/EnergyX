@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2, Edit2, Gamepad2, Star } from 'lucide-react';
 
 export function GamingPage() {
@@ -129,6 +130,15 @@ export function GamingPage() {
                   <button key={i} type="button" onClick={() => setRating(i + 1)}><Star size={20} className={i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'} /></button>
                 ))}
               </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Notes</label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Notes sur le jeu..."
+                rows={2}
+              />
             </div>
           </div>
           <DialogFooter>

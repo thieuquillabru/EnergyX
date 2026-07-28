@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Plus, Trash2, Edit2, Award, Check, ExternalLink } from 'lucide-react';
+import { format } from 'date-fns';
 
 export function SkillsPage() {
   const { skills, addSkill, updateSkill, deleteSkill } = useApp();
@@ -50,7 +51,7 @@ export function SkillsPage() {
   }, []);
 
   const addPractice = useCallback(() => {
-    setPracticeLog((p) => [...p, { id: uuid(), date: new Date().toISOString().slice(0, 10), duration: 30, note: '' }]);
+    setPracticeLog((p) => [...p, { id: uuid(), date: format(new Date(), 'yyyy-MM-dd'), duration: 30, note: '' }]);
   }, []);
 
   const updatePractice = useCallback((id: string, field: keyof PracticeEntry, value: string | number) => {

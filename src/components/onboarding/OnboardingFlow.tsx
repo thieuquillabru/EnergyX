@@ -6,7 +6,7 @@ import { DOMAIN_LABELS, PASSION_CATEGORY_LABELS } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { THEMES, PROPOSED_HABITS } from '@/lib/constants';
 import { applyTheme } from '@/lib/theme';
-import { searchPassions, getPassionsGrouped, normalize } from '@/lib/passionCatalog';
+import { searchPassions, getPassionsGrouped } from '@/lib/passionCatalog';
 import { v4 as uuid } from 'uuid';
 import { PassionPicker } from './PassionPicker';
 import { cn } from '@/lib/utils';
@@ -52,7 +52,8 @@ export function OnboardingFlow() {
     setAvatarError('');
     const reader = new FileReader();
     reader.onload = () => {
-      setAvatar(reader.result as string);
+      if (typeof reader.result !== 'string') return;
+      setAvatar(reader.result);
     };
     reader.readAsDataURL(file);
   }, []);

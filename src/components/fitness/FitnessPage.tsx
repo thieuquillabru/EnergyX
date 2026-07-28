@@ -19,7 +19,7 @@ export function FitnessPage() {
   const { fitnessSessions, addFitnessSession, updateFitnessSession, deleteFitnessSession } = useApp();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [type, setType] = useState('');
   const [exercises, setExercises] = useState<Exercise[]>([{ name: '', sets: 3, reps: 10, weight: 0 }]);
   const [calories, setCalories] = useState(0);
@@ -29,7 +29,9 @@ export function FitnessPage() {
 
   const weekTotal = useMemo(() => {
     const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+    const dayOfWeek = weekStart.getDay();
+    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    weekStart.setDate(weekStart.getDate() - diff);
     const ws = format(weekStart, 'yyyy-MM-dd');
     return fitnessSessions
       .filter((s) => s.date >= ws)
@@ -51,7 +53,7 @@ export function FitnessPage() {
   }, []);
 
   const openNew = useCallback(() => {
-    setEditId(null); setDate(new Date().toISOString().slice(0, 10)); setType('');
+    setEditId(null); setDate(format(new Date(), 'yyyy-MM-dd')); setType('');
     setExercises([{ name: '', sets: 3, reps: 10, weight: 0 }]);
     setCalories(0); setDuration(0); setNote(''); setDialogOpen(true);
   }, []);
@@ -63,6 +65,7 @@ export function FitnessPage() {
   }, []);
 
   const handleSave = useCallback(() => {
+    if (!type.trim()) return;
     if (editId) {
       const existing = fitnessSessions.find((s) => s.id === editId);
       if (existing) updateFitnessSession({ ...existing, date, type, exercises, calories, duration, note });
@@ -106,7 +109,7 @@ export function FitnessPage() {
               {s.exercises.length > 0 && (
                 <div className="space-y-1 mb-2">
                   {s.exercises.filter((e) => e.name).map((e, i) => (
-                    <p key={i} className="text-xs text-muted-foreground">
+                    <p key={`${e.name}-${i}`} className="text-xs text-muted-foreground">
                       {e.name} — {e.sets} × {e.reps} {e.weight > 0 ? `@ ${e.weight} kg` : ''}
                     </p>
                   ))}

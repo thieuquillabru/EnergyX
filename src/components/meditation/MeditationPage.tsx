@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { MeditationType, MeditationSession } from '@/types';
 import { MEDITATION_TYPE_LABELS, MEDITATION_TYPE_EMOJIS } from '@/types';
 import { useApp } from '@/context/AppContext';
@@ -47,17 +47,20 @@ export function MeditationPage() {
     } catch { /* */ }
   }, []);
 
+  const noteRef = useRef(note);
+  useEffect(() => { noteRef.current = note; }, [note]);
+
   const onComplete = useCallback(() => {
     playBeep();
     setIsRunning(false);
     addMeditationSession({
       id: uuid(),
-      date: new Date().toISOString().slice(0, 10),
+      date: format(new Date(), 'yyyy-MM-dd'),
       type: selectedType,
       duration: durationRef.current,
-      note: '',
+      note: noteRef.current,
     });
-    addXP(new Date().toISOString().slice(0, 10), 5);
+    addXP(format(new Date(), 'yyyy-MM-dd'), 5);
   }, [addMeditationSession, addXP, playBeep, selectedType]);
 
   useEffect(() => {
@@ -87,23 +90,23 @@ export function MeditationPage() {
   const handleAddManual = useCallback(() => {
     addMeditationSession({
       id: uuid(),
-      date: new Date().toISOString().slice(0, 10),
+      date: format(new Date(), 'yyyy-MM-dd'),
       type: selectedType,
       duration,
       note,
     });
-    addXP(new Date().toISOString().slice(0, 10), 5);
+    addXP(format(new Date(), 'yyyy-MM-dd'), 5);
     setDialogOpen(false);
   }, [selectedType, duration, note, addMeditationSession, addXP]);
 
   const handleDelete = useCallback((id: string) => { deleteMeditationSession(id); setConfirmDeleteId(null); }, [deleteMeditationSession]);
 
-  const sorted = [...meditationSessions].sort((a, b) => b.date.localeCompare(a.date));
-  const totalMin = meditationSessions.reduce((s, e) => s + e.duration, 0);
+  const sorted = useMemo(() => [...meditationSessions].sort((a, b) => b.date.localeCompare(a.date)), [meditationSessions]);
+  const totalMin = useMemo(() => meditationSessions.reduce((s, e) => s + e.duration, 0), [meditationSessions]);
 
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
-  const progress = duration * 60 > 0 ? ((duration * 60 - timeLeft) / (duration * 60)) * 100 : 0;
+  const progress = (timeLeft === 0 && !isRunning) ? 0 : duration * 60 > 0 ? ((duration * 60 - timeLeft) / (duration * 60)) * 100 : 0;
   const circumference = 2 * Math.PI * 70;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
@@ -140,7 +143,7 @@ export function MeditationPage() {
 
         {/* Ring timer */}
         <div className="relative">
-          <svg width="160" height="160" viewBox="0 0 160 160">
+          <svg className="w-40 h-40" viewBox="0 0 160 160">
             <circle cx="80" cy="80" r="70" fill="none" stroke="var(--border)" strokeWidth="5" />
             <circle cx="80" cy="80" r="70" fill="none" stroke="var(--primary)" strokeWidth="5" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} transform="rotate(-90 80 80)" className="transition-all duration-1000" />
           </svg>

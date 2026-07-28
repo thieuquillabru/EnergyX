@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import type { Habit, HabitCategory } from '@/types';
+import { DOMAIN_LABELS } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { useToday } from '@/hooks/useToday';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -112,7 +113,7 @@ export function HabitsPage() {
               filter === f ? 'border-primary bg-primary/10' : 'border-border'
             )}
           >
-            {f === 'all' ? 'Toutes' : f.charAt(0).toUpperCase() + f.slice(1)}
+            {f === 'all' ? 'Toutes' : (DOMAIN_LABELS[f as keyof typeof DOMAIN_LABELS] || f.charAt(0).toUpperCase() + f.slice(1))}
           </button>
         ))}
       </div>

@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Plus, Trash2, Edit2, Library, Star } from 'lucide-react';
 
 export function LibraryPage() {
@@ -155,6 +156,15 @@ export function LibraryPage() {
                   </button>
                 ))}
               </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Notes</label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Notes sur le livre..."
+                rows={2}
+              />
             </div>
           </div>
           <DialogFooter>

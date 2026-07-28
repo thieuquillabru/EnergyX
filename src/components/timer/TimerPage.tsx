@@ -3,12 +3,14 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { PomodoroPhase } from '@/types';
 import { useApp } from '@/context/AppContext';
+import { useToday } from '@/hooks/useToday';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Timer as TimerIcon, Play, Pause, RotateCcw, Settings, X, Check } from 'lucide-react';
+import { Timer as TimerIcon, Play, Pause, RotateCcw, Settings } from 'lucide-react';
+import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
 
 export function TimerPage() {
@@ -18,12 +20,13 @@ export function TimerPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [task, setTask] = useState('');
   const [showSettings, setShowSettings] = useState(false);
-  const [sessionsDone, setSessionsDone] = useState(0);
-
+  const today = useToday();
+  const sessionsDone = pomodoroSessions.filter(s => s.date === (today || format(new Date(), 'yyyy-MM-dd')) && s.phase === 'focus').length;
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onCompleteRef = useRef<() => void>(() => {});
   const taskRef = useRef(task);
   const phaseRef = useRef(phase);
+  const startedAtRef = useRef<number>(0);
 
   useEffect(() => { taskRef.current = task; }, [task]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
@@ -47,20 +50,20 @@ export function TimerPage() {
     playBeep();
     setIsRunning(false);
 
+    const elapsed = startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : 0;
     addPomodoroSession({
       id: uuid(),
-      date: new Date().toISOString().slice(0, 10),
+      date: today || format(new Date(), 'yyyy-MM-dd'),
       phase: phaseRef.current,
-      duration: 0,
+      duration: elapsed,
       task: taskRef.current,
       startedAt: new Date().toISOString(),
     });
 
     if (phaseRef.current === 'focus') {
-      addXP(new Date().toISOString().slice(0, 10), 10);
-      setSessionsDone((p) => p + 1);
+      addXP(today || format(new Date(), 'yyyy-MM-dd'), 10);
     }
-  }, [addPomodoroSession, addXP, playBeep]);
+  }, [addPomodoroSession, addXP, playBeep, today]);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -99,7 +102,16 @@ export function TimerPage() {
       : timerSettings.longBreakDuration * 60;
   const progress = ((totalDuration - timeLeft) / totalDuration) * 100;
 
-  const handleStart = useCallback(() => setIsRunning(true), []);
+  const handleStart = useCallback(() => {
+    if (timeLeft > 0 && timeLeft === (phase === 'focus'
+      ? timerSettings.focusDuration * 60
+      : phase === 'shortBreak'
+        ? timerSettings.shortBreakDuration * 60
+        : timerSettings.longBreakDuration * 60)) {
+      startedAtRef.current = Date.now();
+    }
+    setIsRunning(true);
+  }, [timeLeft, phase, timerSettings]);
   const handlePause = useCallback(() => setIsRunning(false), []);
   const handleReset = useCallback(() => {
     setIsRunning(false);
@@ -126,7 +138,7 @@ export function TimerPage() {
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   const todaySessions = pomodoroSessions.filter(
-    (s) => s.date === new Date().toISOString().slice(0, 10) && s.phase === 'focus'
+    (s) => s.date === (today || format(new Date(), 'yyyy-MM-dd')) && s.phase === 'focus'
   );
 
   return (
@@ -184,7 +196,7 @@ export function TimerPage() {
 
         {/* Timer ring */}
         <div className="relative">
-          <svg width="200" height="200" viewBox="0 0 200 200">
+          <svg className="w-48 h-48 sm:w-[200px] sm:h-[200px]" viewBox="0 0 200 200">
             <circle
               cx="100" cy="100" r="90"
               fill="none"

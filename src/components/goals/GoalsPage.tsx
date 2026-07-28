@@ -86,6 +86,15 @@ export function GoalsPage() {
     );
   }, []);
 
+  const handleToggleMilestone = useCallback((goalId: string, milestoneId: string) => {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    const updatedMilestones = goal.milestones.map(m =>
+      m.id === milestoneId ? { ...m, done: !m.done } : m
+    );
+    updateGoal({ ...goal, milestones: updatedMilestones });
+  }, [goals, updateGoal]);
+
   const handleSave = useCallback(() => {
     if (!name.trim()) return;
     if (editId) {
@@ -196,7 +205,7 @@ export function GoalsPage() {
                       <button
                         key={m.id}
                         type="button"
-                        onClick={() => toggleMilestone(m.id)}
+                        onClick={() => handleToggleMilestone(g.id, m.id)}
                         className="flex w-full items-center gap-2 text-sm text-left p-1 rounded hover:bg-accent/50"
                       >
                         <Check size={14} className={m.done ? 'text-primary' : 'text-muted-foreground'} />

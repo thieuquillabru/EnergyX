@@ -39,8 +39,8 @@ export const HABIT_ICONS = [
 ];
 
 export const PROPOSED_HABITS = [
-  { name: 'Boire 8 verres d\'eau', icon: '💧', color: '#06b6d4', categories: ['music'] },
-  { name: 'Méditer 10 minutes', icon: '🧘', color: '#8b5cf6', categories: ['music'] },
+  { name: 'Boire 8 verres d\'eau', icon: '💧', color: '#06b6d4', categories: ['sante', 'forme'] },
+  { name: 'Méditer 10 minutes', icon: '🧘', color: '#8b5cf6', categories: ['mental', 'forme'] },
   { name: 'Lire 20 pages', icon: '📖', color: '#22c55e', categories: ['reading'] },
   { name: 'Faire de l\'exercice', icon: '🏃', color: '#ef4444', categories: ['sports'] },
   { name: 'Journal de gratitude', icon: '✍️', color: '#f59e0b', categories: ['other'] },

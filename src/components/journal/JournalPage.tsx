@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { BookOpen, Plus, X, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+
 
 type ViewMode = 'today' | 'calendar' | 'list';
 
@@ -305,8 +305,9 @@ function CalendarView({ entries }: { entries: JournalEntry[] }) {
           const offset = startOfMonth.getDay() === 0 ? 6 : startOfMonth.getDay() - 1;
           const day = i - offset + 1;
           const dateStr = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const daysInMonth = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
 
-          if (day < 1 || day > 30) return <div key={i} />;
+          if (day < 1 || day > daysInMonth) return <div key={i} />;
 
           const hasEntry = dates.has(dateStr);
           return (

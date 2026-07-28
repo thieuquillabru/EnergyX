@@ -47,7 +47,7 @@ export const PASSION_CATALOG: PassionItem[] = [
 
   // ── Music ────────────────────────────────────────
   { id: 'guitare', name: 'Guitare', emoji: '🎸', category: 'music', keywords: ['guitare', 'guitar', 'acoustique', 'electrique', 'électrique'] },
-  { id: 'piano', name: 'Piano', emoji: '🎹', category: 'music', keywords: ['piano', 'clavier', 'piano', 'keyboard'] },
+  { id: 'piano', name: 'Piano', emoji: '🎹', category: 'music', keywords: ['piano', 'clavier', 'keyboard'] },
   { id: 'batterie', name: 'Batterie', emoji: '🥁', category: 'music', keywords: ['batterie', 'drums', 'percussion', 'battery'] },
   { id: 'chant', name: 'Chant', emoji: '🎤', category: 'music', keywords: ['chant', 'singing', 'voix', 'chorale', 'karaoke'] },
   { id: 'violon', name: 'Violon', emoji: '🎻', category: 'music', keywords: ['violon', 'violin', 'alto', 'violoncelle', 'cello'] },

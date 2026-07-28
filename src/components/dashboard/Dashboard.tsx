@@ -9,7 +9,6 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Avatar } from '@/components/ui/AvatarEl';
 import { QUOTES } from '@/lib/constants';
 import { format, subDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { CheckCircle, Target, Flame, Droplets, ChevronRight, Zap } from 'lucide-react';
 
@@ -46,7 +45,6 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   }, [today]);
 
   // Today's habits
-  const todayHabits = useMemo(() => habits, [habits]);
 
   // KPIs
   const totalXP = useMemo(() => xpHistory.reduce((s, h) => s + h.xp, 0), [xpHistory]);

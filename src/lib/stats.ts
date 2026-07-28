@@ -1,4 +1,5 @@
 import type { AppData } from '@/types';
+import { DOMAIN_LABELS, type DomainId } from '@/types';
 import { getLast7Days, getLast30Days, getLast90Days } from './achievements';
 
 export interface HabitCompletionRate {
@@ -66,8 +67,8 @@ export function getHabitCategoryBreakdown(data: AppData): { name: string; value:
     cats[cat] = (cats[cat] || 0) + 1;
   }
   const colors = ['#818cf8', '#34d399', '#fbbf24', '#f87171', '#a78bfa', '#fb923c', '#38bdf8', '#ec4899'];
-  return Object.entries(cats).map(([name, value], i) => ({
-    name,
+  return Object.entries(cats).map(([cat, value], i) => ({
+    name: (DOMAIN_LABELS[cat as DomainId] || cat),
     value,
     color: colors[i % colors.length],
   }));

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef, type ReactNode } from 'react';
+import { format } from 'date-fns';
 import { createContext, useContext } from 'react';
 import type {
   AppData,
@@ -138,27 +139,37 @@ interface AppContextValue extends AppData {
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<AppData>(() => {
-    try {
-      if (typeof window === 'undefined') return getEmptyState();
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return getEmptyState();
-      const parsed = JSON.parse(raw) as Partial<AppData>;
-      return { ...getEmptyState(), ...parsed };
-    } catch {
-      return getEmptyState();
-    }
-  });
-  const isFirstRender = useRef(true);
+  const [data, setData] = useState<AppData>(getEmptyState);
 
-  // Persist on change (skip first render to avoid overwriting localStorage)
+  // Load from localStorage after mount (avoids hydration mismatch)
+  const [hydrated, setHydrated] = useState(false);
+  
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    saveAppData(data);
-  }, [data]);
+    // Use functional update to avoid dependency on `data`
+    setData(prev => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<AppData>;
+          const merged = { ...prev, ...parsed };
+          const today = format(new Date(), 'yyyy-MM-dd');
+          if ((merged as any)._lastWaterDate !== today) {
+            (merged as any).waterToday = 0;
+            (merged as any)._lastWaterDate = today;
+          }
+          return merged;
+        }
+      } catch { /* keep empty state */ }
+      return prev;
+    });
+    setHydrated(true);
+  }, []);
+
+  // Persist on change (only after hydration)
+  useEffect(() => {
+    if (!hydrated) return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+  }, [data, hydrated]);
 
   // ── Updaters ─────────────────────────────────
   const update = useCallback((partial: Partial<AppData>) => {
@@ -369,8 +380,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const importData = useCallback((json: string): boolean => {
     try {
-      const parsed = JSON.parse(json) as AppData;
-      setData(parsed);
+      const parsed = JSON.parse(json) as Partial<AppData>;
+      setData({ ...getEmptyState(), ...parsed });
       return true;
     } catch {
       return false;
@@ -381,50 +392,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setData(getEmptyState());
   }, []);
 
+  const contextValue = useMemo(() => ({
+    ...data,
+    hydrated,
+    setProfile, addPassion, removePassion,
+    addHabit, updateHabit, deleteHabit, toggleHabitCompletion,
+    addGoal, updateGoal, deleteGoal,
+    upsertJournalEntry, deleteJournalEntry,
+    addPomodoroSession, setTimerSettings,
+    addBook, updateBook, deleteBook,
+    addGame, updateGame, deleteGame,
+    addSkill, updateSkill, deleteSkill,
+    addFitnessSession, updateFitnessSession, deleteFitnessSession,
+    addMeditationSession, deleteMeditationSession,
+    toggleFavoriteQuote, addChallenge, updateChallenge, deleteChallenge,
+    addXP, setWaterToday,
+    exportData, importData, resetAll,
+  }), [data, hydrated]);
+
   return (
-    <AppContext.Provider
-      value={{
-        ...data,
-        hydrated: true,
-        setProfile,
-        addPassion,
-        removePassion,
-        addHabit,
-        updateHabit,
-        deleteHabit,
-        toggleHabitCompletion,
-        addGoal,
-        updateGoal,
-        deleteGoal,
-        upsertJournalEntry,
-        deleteJournalEntry,
-        addPomodoroSession,
-        setTimerSettings,
-        addBook,
-        updateBook,
-        deleteBook,
-        addGame,
-        updateGame,
-        deleteGame,
-        addSkill,
-        updateSkill,
-        deleteSkill,
-        addFitnessSession,
-        updateFitnessSession,
-        deleteFitnessSession,
-        addMeditationSession,
-        deleteMeditationSession,
-        toggleFavoriteQuote,
-        addChallenge,
-        updateChallenge,
-        deleteChallenge,
-        addXP,
-        setWaterToday,
-        exportData,
-        importData,
-        resetAll,
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

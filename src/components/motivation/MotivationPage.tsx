@@ -11,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Trash2, Heart, Sparkles, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Heart, Sparkles } from 'lucide-react';
 import { v4 as uuid } from 'uuid';
+import { format } from 'date-fns';
 
 export function MotivationPage() {
   const { favoriteQuotes, toggleFavoriteQuote, challenges, addChallenge, updateChallenge, deleteChallenge } = useApp();
@@ -39,7 +40,7 @@ export function MotivationPage() {
       title: challengeTitle.trim(),
       description: challengeDesc.trim(),
       duration: challengeDuration,
-      startDate: new Date().toISOString().slice(0, 10),
+      startDate: format(new Date(), 'yyyy-MM-dd'),
       completed: false,
     });
     setChallengeTitle(''); setChallengeDesc(''); setChallengeDuration(30); setDialogOpen(false);

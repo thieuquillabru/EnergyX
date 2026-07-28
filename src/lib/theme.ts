@@ -10,10 +10,12 @@ export interface ThemeDefinition {
 
 export function getTheme(id: ThemeId): ThemeDefinition {
   const t = THEMES[id];
+  if (!t) return { id, name: 'Default', emoji: '🎨', vars: {} };
   return { id, name: t.name, emoji: t.emoji, vars: { ...t.vars } };
 }
 
 export function applyTheme(id: ThemeId): void {
+  removeTheme();
   const theme = getTheme(id);
   const root = document.documentElement;
   Object.entries(theme.vars).forEach(([key, value]) => {

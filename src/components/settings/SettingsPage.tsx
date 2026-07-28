@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react';
 import type { ThemeId } from '@/types';
 import { useApp } from '@/context/AppContext';
-import { THEMES, XP_PER_LEVEL } from '@/lib/constants';
+import { THEMES } from '@/lib/constants';
 import { applyTheme } from '@/lib/theme';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { cn } from '@/lib/utils';
@@ -37,7 +37,8 @@ export function SettingsPage() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      const success = importData(reader.result as string);
+      if (typeof reader.result !== 'string') return;
+      const success = importData(reader.result);
       setImportResult(success ? 'success' : 'error');
       setTimeout(() => setImportResult(null), 3000);
     };

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import type { AppData } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { cn } from '@/lib/utils';
@@ -12,17 +13,17 @@ import {
 } from 'recharts';
 
 export function StatsPage() {
-  const data = useApp();
+  const { habits, journal, pomodoroSessions, fitnessSessions, meditationSessions, books, goals } = useApp();
   const [period, setPeriod] = useState<7 | 30 | 90>(7);
 
   const days = useMemo(() => getPeriodDays(period), [period]);
 
-  const habitRates = useMemo(() => getHabitCompletionRates(data, days), [data, days]);
-  const moodTrend = useMemo(() => getMoodTrend(data, days), [data, days]);
-  const focusTime = useMemo(() => getFocusTime(data, days), [data, days]);
-  const exerciseMeditation = useMemo(() => getExerciseAndMeditation(data, days), [data, days]);
-  const categoryBreakdown = useMemo(() => getHabitCategoryBreakdown(data), [data]);
-  const summary = useMemo(() => getSummaryStats(data, period), [data, period]);
+  const habitRates = useMemo(() => getHabitCompletionRates({ habits } as AppData, days), [habits, days]);
+  const moodTrend = useMemo(() => getMoodTrend({ journal } as AppData, days), [journal, days]);
+  const focusTime = useMemo(() => getFocusTime({ pomodoroSessions } as AppData, days), [pomodoroSessions, days]);
+  const exerciseMeditation = useMemo(() => getExerciseAndMeditation({ fitnessSessions, meditationSessions } as AppData, days), [fitnessSessions, meditationSessions, days]);
+  const categoryBreakdown = useMemo(() => getHabitCategoryBreakdown({ habits } as AppData), [habits]);
+  const summary = useMemo(() => getSummaryStats({ habits, journal, pomodoroSessions, fitnessSessions, meditationSessions, books, goals } as AppData, period), [habits, journal, pomodoroSessions, fitnessSessions, meditationSessions, books, goals, period]);
 
   const axisStyle = { tick: { fill: 'var(--muted-foreground)', fontSize: 11 }, axisLine: { stroke: 'var(--border)' } };
   const gridStyle = { stroke: 'var(--border)', strokeOpacity: 0.5 };

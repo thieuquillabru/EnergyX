@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import type { PageId } from '@/types';
 import { useApp } from '@/context/AppContext';
+import { applyTheme } from '@/lib/theme';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { Dashboard } from '@/components/dashboard/Dashboard';
 import { Sidebar } from '@/components/dashboard/Sidebar';
@@ -44,11 +46,21 @@ export function App() {
   const { profile } = useApp();
   const [page, setPage] = useState<PageId>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
-    setMounted(true);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   }, []);
+
+  useEffect(() => {
+    if (profile?.theme) applyTheme(profile.theme);
+  }, [profile?.theme]);
 
   if (!mounted) {
     // Inline skeleton that matches the final layout to prevent CLS
@@ -56,7 +68,7 @@ export function App() {
       <div className="flex min-h-screen bg-background">
         <div className="hidden md:block w-60 shrink-0 border-r border-border" />
         <main className="flex-1 p-4 sm:p-6">
-          <div className="md:ml-0 space-y-4">
+          <div className="space-y-4">
             <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((i) => (

@@ -7,14 +7,11 @@ import { Avatar } from '@/components/ui/AvatarEl';
 import { ACHIEVEMENTS } from '@/lib/achievements';
 import { getTotalXP, getLevel, getLevelProgress } from '@/lib/achievements';
 import { cn } from '@/lib/utils';
-import { Lock } from 'lucide-react';
 
 export function ProfilePage() {
   const { profile, habits, journal, pomodoroSessions, goals, books, meditationSessions, skills, xpHistory, passions } = useApp();
 
-  const totalXP = useMemo(() => getTotalXP({
-    ...{ habits, journal, pomodoroSessions, goals, books, meditationSessions, skills, xpHistory },
-  } as any), [habits, journal, pomodoroSessions, goals, books, meditationSessions, skills, xpHistory]);
+  const totalXP = useMemo(() => getTotalXP({ xpHistory } as any), [xpHistory]);
 
   const level = getLevel(totalXP);
   const levelProgress = getLevelProgress(totalXP);

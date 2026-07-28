@@ -1,5 +1,6 @@
 import type { AchievementDef, AppData } from '@/types';
 import { format, subDays, differenceInDays } from 'date-fns';
+import { XP_PER_LEVEL } from '@/lib/constants';
 
 export function computeStreak(completions: string[]): number {
   if (!completions.length) return 0;
@@ -51,12 +52,10 @@ export function getTotalXP(data: AppData): number {
 }
 
 export function getLevel(totalXP: number): number {
-  const XP_PER_LEVEL = 500;
   return Math.floor(totalXP / XP_PER_LEVEL) + 1;
 }
 
 export function getLevelProgress(totalXP: number): number {
-  const XP_PER_LEVEL = 500;
   return (totalXP % XP_PER_LEVEL) / XP_PER_LEVEL;
 }
 
@@ -200,7 +199,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     emoji: '⭐',
     compute: (data) => {
       const total = data.xpHistory.reduce((s, h) => s + h.xp, 0);
-      const level = Math.floor(total / 500) + 1;
+      const level = Math.floor(total / XP_PER_LEVEL) + 1;
       return { current: Math.min(level, 5), target: 5 };
     },
   },
