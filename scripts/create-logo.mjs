@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+import { writeFileSync } from 'fs';
+import { execSync } from 'child_process';
+
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0f172a"/>
@@ -82,4 +85,18 @@
   <circle cx="340" cy="160" r="3" fill="#818cf8" opacity="0.5"/>
   <circle cx="160" cy="180" r="3.5" fill="#a78bfa" opacity="0.5"/>
   <circle cx="280" cy="100" r="3" fill="#fbbf24" opacity="0.4"/>
-</svg>
+</svg>`;
+
+writeFileSync('/home/z/my-project/public/logo.svg', svg);
+console.log('SVG flame logo created');
+
+// Convert
+try {
+  execSync('/home/z/.local/bin/cairosvg -i /home/z/my-project/public/logo.svg -o /home/z/my-project/public/icon-1024.png -W 1024 -H 1024', { stdio: 'pipe' });
+  console.log('Converted to PNG');
+} catch (e) {
+  console.error('Convert failed:', e.message);
+}
+
+// Resize all versions
+execSync('python3 -c "from PIL import Image; img = Image.open(\'/home/z/my-project/public/icon-1024.png\'); print(f\'Size: {img.size}, Mode: {img.mode}\'); [img.resize((s,s), Image.LANCZOS).save(f\'/home/z/my-project/public/{n}.{e}\') or print(f\'Saved {n}.{e}\') for s,n,e in [(512,\'icon-512\',\'png\'),(192,\'icon-192\',\'png\'),(32,\'favicon\',\'ico\')]"', { stdio: 'pipe' });

@@ -1,29 +1,85 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 30 30" style="enable-background:new 0 0 30 30;" xml:space="preserve">
-<defs>
-  <style type="text/css">
-    .st194{fill:#2D2D2D;stroke:#FFFFFF;stroke-width:0.6317;stroke-miterlimit:10;}
-    .st23{fill:#FFFFFF;}
-
-    .z-breathe {
-      animation: breathe 2.5s ease-in-out infinite;
-    }
-
-    @keyframes breathe {
-      0%, 100% { opacity: 0.7; }
-      50% { opacity: 1; }
-    }
-  </style>
-</defs>
-
-<g>
-  <path class="st194" d="M24.51,28.51H5.49c-2.21,0-4-1.79-4-4V5.49c0-2.21,1.79-4,4-4h19.03c2.21,0,4,1.79,4,4v19.03
-    C28.51,26.72,26.72,28.51,24.51,28.51z"/>
-  <g class="z-breathe">
-    <path class="st23" d="M15.47,7.1l-1.3,1.85c-0.2,0.29-0.54,0.47-0.9,0.47h-7.1V7.09C6.16,7.1,15.47,7.1,15.47,7.1z"/>
-    <polygon class="st23" points="24.3,7.1 13.14,22.91 5.7,22.91 16.86,7.1"/>
-    <path class="st23" d="M14.53,22.91l1.31-1.86c0.2-0.29,0.54-0.47,0.9-0.47h7.09v2.33H14.53z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="flame1" x1="0%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="60%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+    <linearGradient id="flame2" x1="50%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <linearGradient id="arc" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#34d399" stop-opacity="0.9"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="softglow">
+      <feGaussianBlur stdDeviation="20" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  
+  <!-- Background glow circle -->
+  <circle cx="256" cy="256" r="140" fill="#818cf8" opacity="0.08"/>
+  
+  <!-- Growth arc (bottom half ring, sweeping upward) -->
+  <path d="M 120 310 A 160 160 0 0 1 392 310" 
+        stroke="url(#arc)" stroke-width="14" fill="none" 
+        stroke-linecap="round" opacity="0.6"/>
+  
+  <!-- Small upward arrow at the end of the arc -->
+  <path d="M 375 325 L 395 300 L 385 328" 
+        stroke="#34d399" stroke-width="10" fill="none" 
+        stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  
+  <!-- Main flame - teardrop shape, offset left -->
+  <g filter="url(#softglow)">
+    <!-- Outer flame (larger, purple-indigo) -->
+    <path d="
+      M 230 340
+      C 230 340 160 260 160 200
+      C 160 140 200 100 240 100
+      C 260 100 275 115 275 115
+      C 275 115 260 90 240 80
+      C 300 80 340 130 340 200
+      C 340 270 280 340 280 340
+      Z
+    " fill="url(#flame1)" opacity="0.9"/>
+    
+    <!-- Inner flame (smaller, teal-green) -->
+    <path d="
+      M 250 330
+      C 250 330 210 275 210 230
+      C 210 195 235 170 255 170
+      C 265 170 275 180 275 180
+      C 275 180 270 165 260 160
+      C 290 160 310 185 310 230
+      C 310 280 275 330 275 330
+      Z
+    " fill="url(#flame2)" opacity="0.85"/>
+    
+    <!-- Flame core highlight -->
+    <ellipse cx="255" cy="230" rx="22" ry="35" fill="white" opacity="0.15"/>
   </g>
-</g>
+  
+  <!-- Spark particles -->
+  <circle cx="190" cy="140" r="5" fill="#c084fc" opacity="0.7"/>
+  <circle cx="310" cy="120" r="4" fill="#34d399" opacity="0.6"/>
+  <circle cx="340" cy="160" r="3" fill="#818cf8" opacity="0.5"/>
+  <circle cx="160" cy="180" r="3.5" fill="#a78bfa" opacity="0.5"/>
+  <circle cx="280" cy="100" r="3" fill="#fbbf24" opacity="0.4"/>
 </svg>
