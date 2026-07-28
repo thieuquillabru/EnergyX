@@ -8,7 +8,7 @@
     "start": "npx serve out",
     "lint": "eslint . --ignore-pattern docs",
     "typecheck": "tsc --noEmit",
-    "build:pages": "NEXT_PUBLIC_BASE_PATH=/energyx next build && rm -rf docs && cp -r out docs && touch docs/.nojekyll"
+    "build:pages": "NEXT_PUBLIC_BASE_PATH=/EnergyX next build && rm -rf docs && cp -r out docs && touch docs/.nojekyll"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.14",
