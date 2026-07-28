@@ -7,9 +7,11 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, CheckCircle, Target, BookOpen, Timer,
   Library, Gamepad2, Award, Dumbbell, Flower2, Sparkles,
-  BarChart3, User, Settings, Zap, X,
+  BarChart3, User, Settings, X,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/AvatarEl';
+
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 const NAV_ITEMS: { id: PageId; icon: React.ReactNode; label: string }[] = [
   { id: 'dashboard', icon: <LayoutDashboard size={20} />, label: 'Tableau de bord' },
@@ -68,7 +70,7 @@ export function Sidebar({ currentPage, onNavigate, open, onClose }: SidebarProps
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <Zap size={24} className="text-primary" />
+            <img src={`${BASE}/icon-192.png`} alt="" width={24} height={24} className="rounded" />
             <span className="text-lg font-bold">EnergyX</span>
           </div>
           <button
