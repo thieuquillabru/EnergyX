@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { PageId } from '@/types';
-import { useIsHydrated } from '@/hooks/useIsHydrated';
 import { useApp } from '@/context/AppContext';
 import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
 import { Dashboard } from '@/components/dashboard/Dashboard';
@@ -21,16 +20,52 @@ import { StatsPage } from '@/components/stats/StatsPage';
 import { ProfilePage } from '@/components/profile/ProfilePage';
 import { SettingsPage } from '@/components/settings/SettingsPage';
 
+function PageContent({ page, onNavigate }: { page: PageId; onNavigate: (p: PageId) => void }) {
+  switch (page) {
+    case 'dashboard': return <Dashboard onNavigate={onNavigate} />;
+    case 'habits': return <HabitsPage />;
+    case 'goals': return <GoalsPage />;
+    case 'journal': return <JournalPage />;
+    case 'timer': return <TimerPage />;
+    case 'library': return <LibraryPage />;
+    case 'gaming': return <GamingPage />;
+    case 'skills': return <SkillsPage />;
+    case 'fitness': return <FitnessPage />;
+    case 'meditation': return <MeditationPage />;
+    case 'motivation': return <MotivationPage />;
+    case 'stats': return <StatsPage />;
+    case 'profile': return <ProfilePage />;
+    case 'settings': return <SettingsPage />;
+    default: return <Dashboard onNavigate={onNavigate} />;
+  }
+}
+
 export function App() {
-  const hydrated = useIsHydrated();
   const { profile } = useApp();
   const [page, setPage] = useState<PageId>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (!hydrated) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    // Inline skeleton that matches the final layout to prevent CLS
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-muted-foreground">Chargement...</div>
+      <div className="flex min-h-screen bg-background">
+        <div className="hidden md:block w-60 shrink-0 border-r border-border" />
+        <main className="flex-1 p-4 sm:p-6">
+          <div className="md:ml-0 space-y-4">
+            <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 rounded-xl bg-card border border-border animate-pulse" />
+              ))}
+            </div>
+            <div className="h-64 rounded-xl bg-card border border-border animate-pulse" />
+          </div>
+        </main>
       </div>
     );
   }
@@ -38,26 +73,6 @@ export function App() {
   if (!profile?.isOnboarded) {
     return <OnboardingFlow />;
   }
-
-  const renderPage = () => {
-    switch (page) {
-      case 'dashboard': return <Dashboard onNavigate={setPage} />;
-      case 'habits': return <HabitsPage />;
-      case 'goals': return <GoalsPage />;
-      case 'journal': return <JournalPage />;
-      case 'timer': return <TimerPage />;
-      case 'library': return <LibraryPage />;
-      case 'gaming': return <GamingPage />;
-      case 'skills': return <SkillsPage />;
-      case 'fitness': return <FitnessPage />;
-      case 'meditation': return <MeditationPage />;
-      case 'motivation': return <MotivationPage />;
-      case 'stats': return <StatsPage />;
-      case 'profile': return <ProfilePage />;
-      case 'settings': return <SettingsPage />;
-      default: return <Dashboard onNavigate={setPage} />;
-    }
-  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -72,7 +87,7 @@ export function App() {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
         </button>
         <div className="md:ml-60">
-          {renderPage()}
+          <PageContent page={page} onNavigate={setPage} />
         </div>
       </main>
     </div>
