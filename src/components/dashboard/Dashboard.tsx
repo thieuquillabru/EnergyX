@@ -167,7 +167,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                     key={h.id}
                     type="button"
                     onClick={() => toggleHabitCompletion(h.id, today)}
-                    className="flex w-full items-center gap-3 p-2 rounded-lg hover:bg-accent/50 transition-colors text-left"
+                    className="flex w-full items-center gap-3 p-2.5 rounded-lg hover:bg-accent/50 active:bg-accent/80 transition-colors text-left"
                   >
                     <span className="text-xl">{h.icon}</span>
                     <span className={cn(
@@ -192,7 +192,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           {/* Hydration */}
           <div className="rounded-xl border border-border bg-card p-4 space-y-3">
             <h2 className="font-semibold">Hydratation</h2>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 min-w-0">
               <div className="flex items-center gap-2">
                 <Droplets size={24} className="text-blue-400" />
                 <span className="text-3xl font-bold">{waterToday}</span>
@@ -202,7 +202,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 <button
                   type="button"
                   onClick={handleWaterMinus}
-                  className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-accent text-lg"
+                  className="h-11 w-11 rounded-lg border border-border flex items-center justify-center hover:bg-accent active:bg-accent/80 transition-colors text-lg"
                   aria-label="Retirer un verre"
                 >
                   −
@@ -210,7 +210,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 <button
                   type="button"
                   onClick={handleWaterPlus}
-                  className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-accent text-lg"
+                  className="h-11 w-11 rounded-lg border border-border flex items-center justify-center hover:bg-accent active:bg-accent/80 transition-colors text-lg"
                   aria-label="Ajouter un verre"
                 >
                   +

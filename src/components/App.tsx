@@ -22,6 +22,8 @@ import { StatsPage } from '@/components/stats/StatsPage';
 import { ProfilePage } from '@/components/profile/ProfilePage';
 import { SettingsPage } from '@/components/settings/SettingsPage';
 
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
 function PageContent({ page, onNavigate }: { page: PageId; onNavigate: (p: PageId) => void }) {
   switch (page) {
     case 'dashboard': return <Dashboard onNavigate={onNavigate} />;
@@ -68,11 +70,19 @@ export function App() {
   if (!mounted) {
     // Inline skeleton that matches the final layout to prevent CLS
     return (
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-dvh bg-background">
+        {/* Skeleton mobile top bar */}
+        <div
+          className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 border-b border-border bg-background/95 backdrop-blur-sm px-4"
+          style={{ height: 'calc(3.5rem + var(--safe-top))', paddingTop: 'var(--safe-top)' }}
+        >
+          <div className="h-10 w-10 rounded-lg bg-muted animate-pulse" />
+          <div className="h-5 w-24 rounded bg-muted animate-pulse" />
+        </div>
         <div className="hidden md:block w-60 shrink-0 border-r border-border" />
-        <main className="flex-1 p-4 sm:p-6">
+        <main className="flex-1 p-4 pt-[calc(3.5rem+var(--safe-top))] sm:p-6 md:pt-6">
           <div className="space-y-4">
-            <div className="h-8 w-48 rounded-lg bg-muted animate-pulse" />
+            <div className="h-8 w-48 rounded-lg bg-muted animate-pulse hidden md:block" />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="h-24 rounded-xl bg-card border border-border animate-pulse" />
@@ -90,17 +100,34 @@ export function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-dvh bg-background">
       <Sidebar currentPage={page} onNavigate={(p) => { setPage(p); setSidebarOpen(false); }} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <main className="flex-1 p-4 sm:p-6 overflow-auto">
+
+      {/* Sticky mobile top bar with hamburger + logo */}
+      <header
+        className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 border-b border-border bg-background/95 backdrop-blur-sm px-4"
+        style={{ height: 'calc(3.5rem + var(--safe-top))', paddingTop: 'var(--safe-top)' }}
+      >
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
-          className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-card border border-border"
+          className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-accent active:bg-accent/80 transition-colors shrink-0"
           aria-label="Ouvrir le menu"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
         </button>
+        <img src={`${BASE}/icon-192.png`} alt="" width={24} height={24} className="rounded shrink-0" />
+        <span className="text-base font-bold truncate min-w-0">EnergyX</span>
+      </header>
+
+      <main
+        className="flex-1 p-4 pt-[calc(3.5rem+var(--safe-top))] sm:p-6 sm:pt-6 overflow-auto md:pt-6"
+        style={{ paddingBottom: 'var(--safe-bottom)' }}
+      >
         <div className="md:ml-60">
           <PageContent page={page} onNavigate={setPage} />
         </div>

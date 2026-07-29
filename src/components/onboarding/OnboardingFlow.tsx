@@ -145,7 +145,7 @@ export function OnboardingFlow() {
   const canNext = step === 1 ? name.trim().length > 0 : true;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="min-h-dvh flex items-center justify-center p-4 bg-background" style={{ paddingTop: 'var(--safe-top)', paddingBottom: 'var(--safe-bottom)' }}>
       <div className="w-full max-w-md">
         {/* Progress */}
         <div className="mb-8">
