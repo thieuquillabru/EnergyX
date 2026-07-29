@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import type { PomodoroPhase } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { useToday } from '@/hooks/useToday';
@@ -21,7 +21,6 @@ export function TimerPage() {
   const [task, setTask] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const today = useToday();
-  const sessionsDone = pomodoroSessions.filter(s => s.date === (today || format(new Date(), 'yyyy-MM-dd')) && s.phase === 'focus').length;
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onCompleteRef = useRef<() => void>(() => {});
   const taskRef = useRef(task);
@@ -100,7 +99,7 @@ export function TimerPage() {
     : phase === 'shortBreak'
       ? timerSettings.shortBreakDuration * 60
       : timerSettings.longBreakDuration * 60;
-  const progress = ((totalDuration - timeLeft) / totalDuration) * 100;
+  const progress = totalDuration > 0 ? ((totalDuration - timeLeft) / totalDuration) * 100 : 0;
 
   const handleStart = useCallback(() => {
     if (timeLeft > 0 && timeLeft === (phase === 'focus'
@@ -135,11 +134,16 @@ export function TimerPage() {
   }, [timerSettings]);
 
   const circumference = 2 * Math.PI * 90;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
+  const strokeDashoffset = totalDuration > 0 ? circumference - (progress / 100) * circumference : circumference;
 
-  const todaySessions = pomodoroSessions.filter(
-    (s) => s.date === (today || format(new Date(), 'yyyy-MM-dd')) && s.phase === 'focus'
+  const todayFocusSessions = useMemo(
+    () => pomodoroSessions.filter(
+      (s) => s.date === (today || format(new Date(), 'yyyy-MM-dd')) && s.phase === 'focus'
+    ),
+    [pomodoroSessions, today]
   );
+
+  const sessionsDone = todayFocusSessions.length;
 
   return (
     <div className="space-y-6">
@@ -154,19 +158,19 @@ export function TimerPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-xs">Focus (min)</Label>
-              <Input type="number" value={timerSettings.focusDuration} onChange={(e) => setTimerSettings({ ...timerSettings, focusDuration: Math.max(1, Number(e.target.value)) })} className="mt-1" />
+              <Input type="number" value={timerSettings.focusDuration} onChange={(e) => setTimerSettings({ ...timerSettings, focusDuration: Math.min(120, Math.max(1, Number(e.target.value))) })} className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Pause courte (min)</Label>
-              <Input type="number" value={timerSettings.shortBreakDuration} onChange={(e) => setTimerSettings({ ...timerSettings, shortBreakDuration: Math.max(1, Number(e.target.value)) })} className="mt-1" />
+              <Input type="number" value={timerSettings.shortBreakDuration} onChange={(e) => setTimerSettings({ ...timerSettings, shortBreakDuration: Math.min(120, Math.max(1, Number(e.target.value))) })} className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Pause longue (min)</Label>
-              <Input type="number" value={timerSettings.longBreakDuration} onChange={(e) => setTimerSettings({ ...timerSettings, longBreakDuration: Math.max(1, Number(e.target.value)) })} className="mt-1" />
+              <Input type="number" value={timerSettings.longBreakDuration} onChange={(e) => setTimerSettings({ ...timerSettings, longBreakDuration: Math.min(120, Math.max(1, Number(e.target.value))) })} className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Intervalle longue pause</Label>
-              <Input type="number" value={timerSettings.longBreakInterval} onChange={(e) => setTimerSettings({ ...timerSettings, longBreakInterval: Math.max(1, Number(e.target.value)) })} className="mt-1" />
+              <Input type="number" value={timerSettings.longBreakInterval} onChange={(e) => setTimerSettings({ ...timerSettings, longBreakInterval: Math.min(120, Math.max(1, Number(e.target.value))) })} className="mt-1" />
             </div>
           </div>
         </div>
@@ -256,7 +260,7 @@ export function TimerPage() {
             <p className="text-xs text-muted-foreground">Sessions focus</p>
           </div>
           <div>
-            <p className="text-2xl font-bold">{todaySessions.length}</p>
+            <p className="text-2xl font-bold">{todayFocusSessions.length}</p>
             <p className="text-xs text-muted-foreground">Aujourd&apos;hui</p>
           </div>
           <div>

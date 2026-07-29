@@ -32,6 +32,7 @@ export function MotivationPage() {
   const [challengeTitle, setChallengeTitle] = useState('');
   const [challengeDesc, setChallengeDesc] = useState('');
   const [challengeDuration, setChallengeDuration] = useState(30);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const handleAddChallenge = useCallback(() => {
     if (!challengeTitle.trim()) return;
@@ -103,7 +104,7 @@ export function MotivationPage() {
                   {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
                   <p className="text-xs text-muted-foreground mt-1">{c.duration} jours {c.startDate && `(commencé le ${c.startDate})`}</p>
                 </div>
-                <button type="button" onClick={() => deleteChallenge(c.id)} className="text-destructive shrink-0" aria-label="Supprimer"><Trash2 size={14} /></button>
+                <button type="button" onClick={() => setConfirmDeleteId(c.id)} className="text-destructive shrink-0" aria-label="Supprimer"><Trash2 size={14} /></button>
               </div>
             ))}
           </div>

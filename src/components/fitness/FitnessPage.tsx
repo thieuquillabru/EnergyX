@@ -135,8 +135,8 @@ export function FitnessPage() {
               <div><Label>Type</Label><Input value={type} onChange={(e) => setType(e.target.value)} placeholder="Musculation, Cardio..." className="mt-1" /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Durée (min)</Label><Input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="mt-1" /></div>
-              <div><Label>Calories</Label><Input type="number" value={calories} onChange={(e) => setCalories(Number(e.target.value))} className="mt-1" /></div>
+              <div><Label>Durée (min)</Label><Input type="number" value={duration} onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v) && v >= 0) setDuration(v); }} className="mt-1" /></div>
+              <div><Label>Calories</Label><Input type="number" value={calories} onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v) && v >= 0) setCalories(v); }} className="mt-1" /></div>
             </div>
             <div>
               <div className="flex items-center justify-between">
@@ -154,6 +154,10 @@ export function FitnessPage() {
                   </div>
                 ))}
               </div>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <textarea className="mt-1 w-full min-h-[60px] rounded-md border border-input bg-transparent px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Notes optionnels..." value={note} onChange={(e) => setNote(e.target.value)} />
             </div>
           </div>
           <DialogFooter>

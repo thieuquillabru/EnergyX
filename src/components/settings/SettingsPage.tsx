@@ -52,7 +52,7 @@ export function SettingsPage() {
   }, [resetAll]);
 
   const handleRestartOnboarding = useCallback(() => {
-    setProfile({ ...profile!, isOnboarded: false });
+    if (profile) setProfile({ ...profile, isOnboarded: false });
     setConfirmRestart(false);
   }, [profile, setProfile]);
 

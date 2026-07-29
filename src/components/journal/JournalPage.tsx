@@ -277,6 +277,7 @@ function ListView({ entries }: { entries: JournalEntry[] }) {
 }
 
 function CalendarView({ entries }: { entries: JournalEntry[] }) {
+  const today = useToday();
   const dates = new Set(entries.map((e) => e.date));
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -309,15 +310,15 @@ function CalendarView({ entries }: { entries: JournalEntry[] }) {
         </div>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center">
-        {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d) => (
-          <div key={d} className="text-xs text-muted-foreground font-medium py-1">{d}</div>
+        {['L', 'Ma', 'Me', 'J', 'V', 'S', 'D'].map((d, i) => (
+          <div key={`dh-${i}`} className="text-xs text-muted-foreground font-medium py-1">{d}</div>
         ))}
         {Array.from({ length: 42 }).map((_, i) => {
           const day = i - offset + 1;
           if (day < 1 || day > daysInMonth) return <div key={i} />;
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const hasEntry = dates.has(dateStr);
-          const isToday = dateStr === new Date().toISOString().slice(0, 10);
+          const isToday = dateStr === today;
           return (
             <div
               key={i}

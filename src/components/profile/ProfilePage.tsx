@@ -34,8 +34,8 @@ export function ProfilePage() {
 
   const totalXP = useMemo(() => getTotalXPFromRecords(xpHistory), [xpHistory]);
 
-  const level = getLevel(totalXP);
-  const levelProgress = getLevelProgress(totalXP);
+  const level = useMemo(() => getLevel(totalXP), [totalXP]);
+  const levelProgress = useMemo(() => getLevelProgress(totalXP), [totalXP]);
 
   const achievementsState = useMemo(() => {
     const data = { ...EMPTY, habits, journal, pomodoroSessions, goals, books, meditationSessions, skills, xpHistory };
@@ -62,8 +62,8 @@ export function ProfilePage() {
       {/* Profile card */}
       <div className="rounded-xl border border-border bg-card p-6 flex items-center gap-6">
         <Avatar
-          src={profile.avatar.startsWith('data:') ? profile.avatar : undefined}
-          emoji={profile.avatar.startsWith('data:') ? undefined : profile.avatar}
+          src={profile.avatar?.startsWith('data:') ? profile.avatar : undefined}
+          emoji={profile.avatar?.startsWith('data:') ? undefined : profile.avatar || '😀'}
           name={profile.name}
           size="lg"
         />

@@ -156,26 +156,34 @@ export function SkillsPage() {
               </div>
               <div className="space-y-2 mt-2">
                 {resources.map((r) => (
-                  <div key={r.id} className="flex items-center gap-2 p-2 rounded border border-border">
-                    <button type="button" onClick={() => updateResource(r.id, 'done', !r.done)}>
-                      <Check size={14} className={r.done ? 'text-primary' : 'text-muted-foreground'} />
-                    </button>
-                    <select
-                      value={r.type}
-                      onChange={(e) => updateResource(r.id, 'type', e.target.value)}
-                      className="text-xs border border-border rounded px-1 bg-background"
-                    >
-                      {(Object.entries(RESOURCE_TYPE_LABELS) as [ResourceType, string][]).map(([k, v]) => (
-                        <option key={k} value={k}>{v}</option>
-                      ))}
-                    </select>
+                  <div key={r.id} className="p-2 rounded border border-border space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => updateResource(r.id, 'done', !r.done)}>
+                        <Check size={14} className={r.done ? 'text-primary' : 'text-muted-foreground'} />
+                      </button>
+                      <select
+                        value={r.type}
+                        onChange={(e) => updateResource(r.id, 'type', e.target.value)}
+                        className="text-xs border border-border rounded px-1 bg-background"
+                      >
+                        {(Object.entries(RESOURCE_TYPE_LABELS) as [ResourceType, string][]).map(([k, v]) => (
+                          <option key={k} value={k}>{v}</option>
+                        ))}
+                      </select>
+                      <Input
+                        placeholder="Titre"
+                        value={r.title}
+                        onChange={(e) => updateResource(r.id, 'title', e.target.value)}
+                        className="h-7 text-xs flex-1"
+                      />
+                      <button type="button" onClick={() => removeResource(r.id)} className="text-destructive"><Trash2 size={12} /></button>
+                    </div>
                     <Input
-                      placeholder="Titre"
-                      value={r.title}
-                      onChange={(e) => updateResource(r.id, 'title', e.target.value)}
-                      className="h-7 text-xs flex-1"
+                      placeholder="URL (optionnel)"
+                      value={r.url}
+                      onChange={(e) => updateResource(r.id, 'url', e.target.value)}
+                      className="h-7 text-xs"
                     />
-                    <button type="button" onClick={() => removeResource(r.id)} className="text-destructive"><Trash2 size={12} /></button>
                   </div>
                 ))}
               </div>

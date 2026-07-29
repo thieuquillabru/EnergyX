@@ -1,4 +1,4 @@
-import type { PassionItem, PassionCategory, ThemeId } from '@/types';
+import type { ThemeId } from '@/types';
 import { THEMES } from './constants';
 
 export interface ThemeDefinition {

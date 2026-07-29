@@ -109,7 +109,7 @@ export function StatsPage() {
               <Tooltip
                 contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px' }}
                 labelFormatter={(d: string) => formatShortDate(d)}
-                formatter={(v: number) => [`${v.toFixed(0)}%`, 'Complétion']}
+                formatter={(v: number) => [v != null ? `${v.toFixed(0)}%` : 'N/A', 'Complétion']}
               />
               <Area type="monotone" dataKey="rate" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.2} />
             </AreaChart>

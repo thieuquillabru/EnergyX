@@ -210,7 +210,11 @@ export function MeditationPage() {
                 ))}
               </div>
             </div>
-            <div><Label>Durée (min)</Label><Input type="number" value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="mt-1" /></div>
+            <div><Label>Durée (min)</Label><Input type="number" value={duration} onChange={(e) => { const v = parseInt(e.target.value, 10); if (!isNaN(v) && v >= 1) setDuration(v); }} className="mt-1" /></div>
+            <div>
+              <Label>Notes</Label>
+              <textarea className="mt-1 w-full min-h-[60px] rounded-md border border-input bg-transparent px-3 py-2 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" placeholder="Notes optionnels..." value={note} onChange={(e) => setNote(e.target.value)} />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>Annuler</Button>

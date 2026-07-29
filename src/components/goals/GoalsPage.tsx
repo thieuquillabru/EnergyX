@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import type { Goal, GoalMilestone, HabitCategory } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -20,13 +20,15 @@ export function GoalsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<string>('personnel');
+  const [category, setCategory] = useState<HabitCategory>('personnel');
   const [priority, setPriority] = useState<1 | 2 | 3 | 4>(2);
   const [deadline, setDeadline] = useState('');
   const [milestones, setMilestones] = useState<GoalMilestone[]>([]);
   const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
   const [manualProgress, setManualProgress] = useState(0);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const goalsRef = useRef(goals);
+  goalsRef.current = goals;
 
   const getProgress = useCallback((g: Goal) => {
     if (g.milestones.length > 0) {
@@ -87,13 +89,13 @@ export function GoalsPage() {
   }, []);
 
   const handleToggleMilestone = useCallback((goalId: string, milestoneId: string) => {
-    const goal = goals.find(g => g.id === goalId);
+    const goal = goalsRef.current.find(g => g.id === goalId);
     if (!goal) return;
     const updatedMilestones = goal.milestones.map(m =>
       m.id === milestoneId ? { ...m, done: !m.done } : m
     );
     updateGoal({ ...goal, milestones: updatedMilestones });
-  }, [goals, updateGoal]);
+  }, [updateGoal]);
 
   const handleSave = useCallback(() => {
     if (!name.trim()) return;
@@ -103,7 +105,7 @@ export function GoalsPage() {
         updateGoal({
           ...existing,
           name: name.trim(),
-          category: category as HabitCategory,
+          category,
           priority,
           deadline: deadline || null,
           milestones,
@@ -114,7 +116,7 @@ export function GoalsPage() {
       const goal: Goal = {
         id: uuid(),
         name: name.trim(),
-        category: category as HabitCategory,
+        category,
         priority,
         deadline: deadline || null,
         milestones,

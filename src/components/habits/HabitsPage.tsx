@@ -22,13 +22,13 @@ import { CheckCircle, Plus, Trash2, Flame, Edit2 } from 'lucide-react';
 export function HabitsPage() {
   const { habits, addHabit, updateHabit, deleteHabit, toggleHabitCompletion } = useApp();
   const today = useToday();
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState<HabitCategory | 'all'>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('🏃');
   const [color, setColor] = useState('#818cf8');
-  const [category, setCategory] = useState<string>('personnel');
+  const [category, setCategory] = useState<HabitCategory>('personnel');
   const [reminderTime, setReminderTime] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -67,7 +67,7 @@ export function HabitsPage() {
           name: name.trim(),
           icon,
           color,
-          category: category as HabitCategory,
+          category,
           reminderTime: reminderTime || null,
         });
       }
@@ -77,7 +77,7 @@ export function HabitsPage() {
         name: name.trim(),
         icon,
         color,
-        category: category as HabitCategory,
+        category,
         reminderTime: reminderTime || null,
         completions: [],
       };
@@ -107,7 +107,7 @@ export function HabitsPage() {
           <button
             key={f}
             type="button"
-            onClick={() => setFilter(f)}
+            onClick={() => setFilter(f as HabitCategory | 'all')}
             className={cn(
               'px-3 py-1 rounded-lg text-sm border transition-colors',
               filter === f ? 'border-primary bg-primary/10' : 'border-border'
@@ -250,6 +250,34 @@ export function HabitsPage() {
                     )}
                     style={{ backgroundColor: c }}
                   />
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label>Catégorie</Label>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setCategory('personnel')}
+                  className={cn(
+                    'px-2.5 py-1 text-xs rounded-lg border transition-colors',
+                    category === 'personnel' ? 'border-primary bg-primary/10' : 'border-border'
+                  )}
+                >
+                  Personnel
+                </button>
+                {(Object.entries(DOMAIN_LABELS) as [HabitCategory, string][]).map(([k, v]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setCategory(k)}
+                    className={cn(
+                      'px-2.5 py-1 text-xs rounded-lg border transition-colors',
+                      category === k ? 'border-primary bg-primary/10' : 'border-border'
+                    )}
+                  >
+                    {v}
+                  </button>
                 ))}
               </div>
             </div>
