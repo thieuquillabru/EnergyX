@@ -361,8 +361,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const importData = useCallback((json: string): boolean => {
     try {
-      const parsed = JSON.parse(json) as Partial<AppData>;
-      setData({ ...getEmptyState(), ...parsed });
+      const parsed = JSON.parse(json);
+      if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return false;
+      // Basic validation: check known keys exist with correct types
+      const allowedKeys = new Set(Object.keys(getEmptyState()));
+      const unknownKeys = Object.keys(parsed).filter(k => !allowedKeys.has(k));
+      if (unknownKeys.length > 0) return false;
+      setData({ ...getEmptyState(), ...(parsed as Partial<AppData>) });
       return true;
     } catch {
       return false;

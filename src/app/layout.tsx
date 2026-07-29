@@ -24,10 +24,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "EnergyX — Développement personnel",
   description: "Application complète de développement personnel : habitudes, objectifs, journal, méditation et plus.",
-  manifest: '/manifest.webmanifest',
+  manifest: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/manifest.webmanifest`,
   icons: {
-    icon: '/favicon.ico',
-    apple: '/icon-192.png',
+    icon: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/favicon.ico`,
+    apple: `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/icon-192.png`,
   },
   appleWebApp: {
     capable: true,

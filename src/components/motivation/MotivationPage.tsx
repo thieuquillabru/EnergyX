@@ -105,6 +105,12 @@ export function MotivationPage() {
                   <p className="text-xs text-muted-foreground mt-1">{c.duration} jours {c.startDate && `(commencé le ${c.startDate})`}</p>
                 </div>
                 <button type="button" onClick={() => setConfirmDeleteId(c.id)} className="text-destructive shrink-0" aria-label="Supprimer"><Trash2 size={14} /></button>
+                {confirmDeleteId === c.id && (
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => { deleteChallenge(c.id); setConfirmDeleteId(null); }} className="px-2 py-1 text-xs bg-destructive text-destructive-foreground rounded">Oui</button>
+                    <button type="button" onClick={() => setConfirmDeleteId(null)} className="px-2 py-1 text-xs border border-border rounded">Non</button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

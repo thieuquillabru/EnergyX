@@ -74,7 +74,7 @@ export function Sidebar({ currentPage, onNavigate, open, onClose }: SidebarProps
       <aside
         className={cn(
           'fixed top-0 left-0 z-50 h-full w-60 bg-card border-r border-border flex flex-col',
-          'translate-x-0 md:translate-x-0',
+          'md:sticky md:z-0 md:top-0 md:h-auto',
           'transition-transform duration-300 ease-out will-change-transform',
           !open && '-translate-x-full'
         )}

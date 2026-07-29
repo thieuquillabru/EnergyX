@@ -161,35 +161,35 @@ export function SettingsPage() {
       </div>
 
       {/* Confirm dialogs */}
-      {confirmReset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-xl border border-border bg-card p-6 max-w-sm mx-4 space-y-4">
-            <h3 className="font-semibold">Réinitialiser tout ?</h3>
-            <p className="text-sm text-muted-foreground">
-              Toutes vos données seront supprimées définitivement. Cette action est irréversible.
-            </p>
-            <div className="flex gap-2 justify-end">
-              <Button variant="ghost" onClick={() => setConfirmReset(false)}>Annuler</Button>
-              <Button variant="destructive" onClick={handleReset}>Réinitialiser</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Réinitialiser tout ?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Toutes vos données seront supprimées définitivement. Cette action est irréversible.
+          </p>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmReset(false)}>Annuler</Button>
+            <Button variant="destructive" onClick={handleReset}>Réinitialiser</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {confirmRestart && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="rounded-xl border border-border bg-card p-6 max-w-sm mx-4 space-y-4">
-            <h3 className="font-semibold">Relancer l&apos;onboarding ?</h3>
-            <p className="text-sm text-muted-foreground">
-              Vous passerez par l&apos;assistant de configuration. Vos données existantes seront conservées.
-            </p>
-            <div className="flex gap-2 justify-end">
-              <Button variant="ghost" onClick={() => setConfirmRestart(false)}>Annuler</Button>
-              <Button onClick={handleRestartOnboarding}>Continuer</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={confirmRestart} onOpenChange={setConfirmRestart}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Relancer l&apos;onboarding ?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Vous passerez par l&apos;assistant de configuration. Vos données existantes seront conservées.
+          </p>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmRestart(false)}>Annuler</Button>
+            <Button onClick={handleRestartOnboarding}>Continuer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

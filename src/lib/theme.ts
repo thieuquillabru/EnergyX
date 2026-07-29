@@ -24,29 +24,13 @@ export function applyTheme(id: ThemeId): void {
 }
 
 export function removeTheme(): void {
-  // Remove custom theme vars (except Tailwind-defined ones)
   const root = document.documentElement;
-  root.style.removeProperty('--background');
-  root.style.removeProperty('--foreground');
-  root.style.removeProperty('--card');
-  root.style.removeProperty('--card-foreground');
-  root.style.removeProperty('--popover');
-  root.style.removeProperty('--popover-foreground');
-  root.style.removeProperty('--primary');
-  root.style.removeProperty('--primary-foreground');
-  root.style.removeProperty('--secondary');
-  root.style.removeProperty('--secondary-foreground');
-  root.style.removeProperty('--muted');
-  root.style.removeProperty('--muted-foreground');
-  root.style.removeProperty('--accent');
-  root.style.removeProperty('--accent-foreground');
-  root.style.removeProperty('--destructive');
-  root.style.removeProperty('--border');
-  root.style.removeProperty('--input');
-  root.style.removeProperty('--ring');
-  root.style.removeProperty('--chart-1');
-  root.style.removeProperty('--chart-2');
-  root.style.removeProperty('--chart-3');
-  root.style.removeProperty('--chart-4');
-  root.style.removeProperty('--chart-5');
+  const vars = [
+    '--background', '--foreground', '--card', '--card-foreground',
+    '--popover', '--popover-foreground', '--primary', '--primary-foreground',
+    '--secondary', '--secondary-foreground', '--muted', '--muted-foreground',
+    '--accent', '--accent-foreground', '--destructive', '--border',
+    '--input', '--ring', '--chart-1', '--chart-2', '--chart-3', '--chart-4', '--chart-5',
+  ];
+  vars.forEach(v => root.style.removeProperty(v));
 }
