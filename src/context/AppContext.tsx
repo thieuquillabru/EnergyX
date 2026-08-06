@@ -123,6 +123,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Load from localStorage after mount (avoids hydration mismatch)
   const [hydrated, setHydrated] = useState(false);
+  const lastWaterDateRef = useRef<string | null>(null);
   
   useEffect(() => {
     // Use functional update to avoid dependency on `data`
@@ -133,10 +134,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const parsed = JSON.parse(raw) as Partial<AppData>;
           const merged = { ...prev, ...parsed };
           const today = format(new Date(), 'yyyy-MM-dd');
-          const lastWaterDate = (merged as Record<string, unknown>)._lastWaterDate as string | undefined;
-          if (lastWaterDate !== today) {
+          if ((parsed as Record<string, unknown>)._lastWaterDate !== today) {
             merged.waterToday = 0;
-            (merged as Record<string, unknown>)._lastWaterDate = today;
           }
           return merged;
         }
@@ -365,9 +364,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return false;
       // Basic validation: check known keys exist with correct types
       const allowedKeys = new Set(Object.keys(getEmptyState()));
-      const unknownKeys = Object.keys(parsed).filter(k => !allowedKeys.has(k));
-      if (unknownKeys.length > 0) return false;
-      setData({ ...getEmptyState(), ...(parsed as Partial<AppData>) });
+      const importKeys = Object.keys(parsed).filter(k => allowedKeys.has(k));
+      // Strip unknown keys for forward-compatibility
+      const cleaned: Record<string, unknown> = {}; importKeys.forEach(k => { cleaned[k] = (parsed as Record<string, unknown>)[k]; }); setData({ ...getEmptyState(), ...(cleaned as Partial<AppData>) });
       return true;
     } catch {
       return false;

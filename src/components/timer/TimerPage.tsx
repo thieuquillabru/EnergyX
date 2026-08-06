@@ -49,7 +49,12 @@ export function TimerPage() {
     playBeep();
     setIsRunning(false);
 
-    const elapsed = startedAtRef.current ? Math.round((Date.now() - startedAtRef.current) / 1000) : 0;
+    const totalDuration = phaseRef.current === 'focus'
+      ? timerSettings.focusDuration * 60
+      : phaseRef.current === 'shortBreak'
+        ? timerSettings.shortBreakDuration * 60
+        : timerSettings.longBreakDuration * 60;
+    const elapsed = totalDuration; // Actual counted seconds (timer counted down from totalDuration to 0)
     addPomodoroSession({
       id: uuid(),
       date: today || format(new Date(), 'yyyy-MM-dd'),
